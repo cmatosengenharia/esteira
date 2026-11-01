@@ -2,6 +2,8 @@ using System.Text;
 using Esteira.Api.Auth;
 using Esteira.Api.Endpoints;
 using Esteira.Infrastructure;
+using Esteira.Infrastructure.Media;
+using Esteira.Infrastructure.Messaging;
 using Esteira.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +15,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((ctx, cfg) => cfg.ReadFrom.Configuration(ctx.Configuration).WriteTo.Console());
 
 builder.Services.AddEsteiraPersistence(builder.Configuration);
+builder.Services.AddEsteiraMedia(builder.Configuration);
+builder.Services.AddEsteiraMessaging(builder.Configuration);
+builder.WebHost.ConfigureKestrel(k => k.Limits.MaxRequestBodySize = 4L * 1024 * 1024 * 1024);
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(f => f.MultipartBodyLengthLimit = 4L * 1024 * 1024 * 1024);
 
 var jwtSection = builder.Configuration.GetSection(JwtOptions.Section);
 builder.Services.Configure<JwtOptions>(jwtSection);
@@ -51,6 +57,7 @@ app.UseMiddleware<TenantResolutionMiddleware>();
 app.UseAuthorization();
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" })).AllowAnonymous();
+app.MapJobsEndpoints();
 if (app.Environment.IsDevelopment())
     app.MapDevEndpoints();
 

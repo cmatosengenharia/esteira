@@ -1,5 +1,6 @@
 using Esteira.Application.Messaging;
 using Esteira.Infrastructure;
+using Esteira.Infrastructure.Media;
 using Esteira.Infrastructure.Messaging;
 using Esteira.Workers.Consumers;
 using Serilog;
@@ -8,6 +9,7 @@ var builder = Host.CreateApplicationBuilder(args);
 builder.Services.AddSerilog((sp, cfg) => cfg.ReadFrom.Configuration(builder.Configuration).WriteTo.Console());
 
 builder.Services.AddEsteiraPersistence(builder.Configuration);
+builder.Services.AddEsteiraMedia(builder.Configuration);
 builder.Services.AddEsteiraMessaging(builder.Configuration,
     registerConsumers: x =>
     {

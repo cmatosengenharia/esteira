@@ -8,3 +8,13 @@ Cada linha precisa de: repo, commit (ou tag) consultado, licença, arquivos de o
 
 | Repo | Commit / tag | Licença | Arquivos de origem | Onde foi portado | Observações |
 | --- | --- | --- | --- | --- | --- |
+| [WyattBlue/auto-editor](https://github.com/WyattBlue/auto-editor) | série 27.x (2025); registrar o commit exato na primeira revisão com acesso ao repo | Unlicense (domínio público) | `auto_editor/analyze.py` (níveis de áudio por janela), `auto_editor/utils/func.py` (margem, minclip/mincut) | `src/Esteira.Infrastructure/Media/Audio/SilenceDetector.cs` | Reescrito em C#. Diferença deliberada: nível em RMS dBFS com limiar em dB (contrato `params.silenceThresholdDb`) em vez de amplitude máxima normalizada 0..1. Testes em `tests/Esteira.UnitTests/Media/SilenceDetectorTests.cs`. |
+| [remotion-dev/remotion](https://github.com/remotion-dev/remotion) — pacote `@remotion/captions` | 4.0.x (2025) | MIT (o pacote `@remotion/captions`; o core do Remotion tem licença comercial e **não** é usado) | `packages/captions/src/create-tiktok-style-captions.ts` | `src/Esteira.Infrastructure/Media/Captions/CaptionGrouper.cs` | Só a regra de agrupamento e o padrão de 1200 ms (`combineTokensWithinMilliseconds`); implementação própria, sem cópia. Confirmar a licença do pacote no `package.json` na primeira revisão com acesso ao repo. |
+
+## Dependências de runtime (não portadas)
+
+| Ferramenta | Licença | Uso |
+| --- | --- | --- |
+| ffmpeg / ffprobe | LGPL/GPL (binário externo, chamado por processo) | ingest, extração de áudio, render |
+| whisper.cpp (`whisper-cli`) | MIT (binário externo, chamado por processo) | transcrição com timestamps por palavra |
+| Hyperframes | Apache-2.0 | composições HTML (a partir da Fase 1) |
