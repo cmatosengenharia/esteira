@@ -1,0 +1,64 @@
+# Gera migrations do EF Core automaticamente quando o modelo muda.
+# Para pedir uma migration: escreva o nome em src/Esteira.Infrastructure/Persistence/Migrations/NEXT_MIGRATION_NAME
+# e faça push. O job gera, compila, testa e commita na main (o arquivo é consumido).
+name: Migrations
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/Esteira.Domain/**"
+      - "src/Esteira.Infrastructure/Persistence/**"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: migrations-main
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    if: ${{ !startsWith(github.event.head_commit.message, 'Gera migration') }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Instala dotnet-ef
+        run: dotnet tool install --global dotnet-ef
+      - name: Restore
+        run: dotnet restore Esteira.sln
+      - name: Verifica mudanças pendentes no modelo
+        id: pending
+        run: |
+          set +e
+          dotnet ef migrations has-pending-model-changes --project src/Esteira.Infrastructure --startup-project src/Esteira.Api --no-build 2>&1 | tee pending.log
+          code=${PIPESTATUS[0]}
+          set -e
+          # exit 0 = sem mudanças; 1 = há mudanças pendentes
+          if [ "$code" = "0" ]; then echo "pending=false" >> "$GITHUB_OUTPUT"; else echo "pending=true" >> "$GITHUB_OUTPUT"; fi
+      - name: Gera migration
+        if: steps.pending.outputs.pending == 'true'
+        run: |
+          NAME_FILE=src/Esteira.Infrastructure/Persistence/Migrations/NEXT_MIGRATION_NAME
+          if [ -f "$NAME_FILE" ]; then NAME=$(tr -d '[:space:]' < "$NAME_FILE"); else NAME="Auto_$(date -u +%Y%m%d%H%M)"; fi
+          dotnet ef migrations add "$NAME" --project src/Esteira.Infrastructure --startup-project src/Esteira.Api --output-dir Persistence/Migrations
+          rm -f "$NAME_FILE"
+          echo "NAME=$NAME" >> "$GITHUB_ENV"
+      - name: Build e testes com a migration
+        if: steps.pending.outputs.pending == 'true'
+        run: |
+          dotnet build Esteira.sln --configuration Release
+          dotnet test Esteira.sln --no-build --configuration Release
+      - name: Commit e push
+        if: steps.pending.outputs.pending == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Gera migration $NAME"
+          git push origin HEAD:main

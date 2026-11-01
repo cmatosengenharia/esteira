@@ -3,4 +3,8 @@
   <ItemGroup>
     <ProjectReference Include="../Esteira.Domain/Esteira.Domain.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- Só a abstração DbSet/SaveChanges; provider e configuração ficam na Infrastructure. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+  </ItemGroup>
 </Project>
