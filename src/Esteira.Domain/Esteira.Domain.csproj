@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Camada Domain: entidades e regras. Sem dependências externas. -->
+</Project>

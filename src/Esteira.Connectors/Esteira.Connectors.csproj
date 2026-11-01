@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Conectores de redes sociais: implementações de ISocialPublisher (modos Api e Assisted). -->
+  <ItemGroup>
+    <ProjectReference Include="../Esteira.Application/Esteira.Application.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Http" />
+  </ItemGroup>
+</Project>

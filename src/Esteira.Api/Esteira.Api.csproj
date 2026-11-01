@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <!-- API HTTP: recebe upload, grava e publica eventos. Nunca executa etapa da esteira. -->
+  <ItemGroup>
+    <ProjectReference Include="../Esteira.Infrastructure/Esteira.Infrastructure.csproj" />
+    <ProjectReference Include="../Esteira.Connectors/Esteira.Connectors.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Serilog.AspNetCore" />
+  </ItemGroup>
+</Project>

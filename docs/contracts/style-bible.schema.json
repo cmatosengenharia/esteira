@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://esteira.dev/contracts/style-bible/v1",
+  "title": "StyleBible",
+  "description": "Molde extraído de um vídeo de referência. Só números medidos e categorias; nunca footage, música ou marca do original. Referências: open-edits/reverse-engineer, reel-style-clone.",
+  "type": "object",
+  "required": ["version", "reference", "pacing", "hook", "structure", "captions", "zoom", "music", "loudness", "cta"],
+  "properties": {
+    "version": { "const": 1 },
+    "reference": { "type": "object", "required": ["url", "niche", "durationSeconds", "aspect"], "properties": {
+      "url": { "type": "string" }, "niche": { "type": "string" }, "durationSeconds": { "type": "number" },
+      "aspect": { "enum": ["9:16", "16:9", "1:1", "4:5"] }, "platform": { "type": "string" },
+      "views": { "type": "integer" }, "channelMedianViews": { "type": "integer" } } },
+    "pacing": { "type": "object", "required": ["cutsPerMinute", "averageShotSeconds"], "properties": {
+      "cutsPerMinute": { "type": "number" }, "averageShotSeconds": { "type": "number" },
+      "shotSecondsStdDev": { "type": "number" }, "speedUpRatio": { "type": "number" } } },
+    "hook": { "type": "object", "required": ["durationSeconds", "kind"], "properties": {
+      "durationSeconds": { "type": "number" }, "kind": { "enum": ["question", "number", "promise", "shock", "visual", "story"] },
+      "transcript": { "type": "string" }, "textOnScreen": { "type": "boolean" } } },
+    "structure": { "type": "array", "items": { "type": "object", "required": ["role", "startRatio", "endRatio"], "properties": {
+      "role": { "enum": ["hook", "context", "payoff", "proof", "objection", "cta", "outro"] },
+      "startRatio": { "type": "number" }, "endRatio": { "type": "number" }, "note": { "type": "string" } } } },
+    "captions": { "type": "object", "required": ["present", "mode"], "properties": {
+      "present": { "type": "boolean" }, "mode": { "enum": ["word", "phrase", "none"] },
+      "position": { "enum": ["bottom", "center", "top"] }, "activeColor": { "type": "string" },
+      "uppercase": { "type": "boolean" }, "approxFontSizeRatio": { "type": "number" } } },
+    "zoom": { "type": "object", "required": ["perMinute"], "properties": {
+      "perMinute": { "type": "number" }, "kinds": { "type": "array", "items": { "enum": ["punch", "ratchet", "kenburns"] } },
+      "averageScale": { "type": "number" } } },
+    "broll": { "type": "object", "properties": { "ratio": { "type": "number" }, "triggers": { "type": "array", "items": { "type": "string" } } } },
+    "music": { "type": "object", "required": ["present"], "properties": {
+      "present": { "type": "boolean" }, "bpm": { "type": "number" }, "energy": { "enum": ["low", "medium", "high"] },
+      "cutsOnBeatRatio": { "type": "number" } } },
+    "loudness": { "type": "object", "properties": { "integratedLufs": { "type": "number" }, "speechRateWpm": { "type": "number" } } },
+    "palette": { "type": "array", "items": { "type": "string" }, "maxItems": 5 },
+    "cta": { "type": "object", "required": ["present"], "properties": {
+      "present": { "type": "boolean" }, "atRatio": { "type": "number" }, "kind": { "enum": ["follow", "comment", "link", "dm", "save"] } } },
+    "notes": { "type": "string", "description": "Observações qualitativas do LLM de visão, em até 5 linhas." }
+  }
+}

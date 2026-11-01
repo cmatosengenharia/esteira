@@ -1,0 +1,39 @@
+# Só infraestrutura. API e Workers rodam no Mac com `dotnet run`.
+services:
+  postgres:
+    image: postgres:16
+    container_name: esteira-postgres
+    environment:
+      POSTGRES_USER: esteira
+      POSTGRES_PASSWORD: esteira
+      POSTGRES_DB: esteira
+    ports:
+      - "5432:5432"
+    volumes:
+      - esteira-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U esteira -d esteira"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: esteira-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: esteira
+      RABBITMQ_DEFAULT_PASS: esteira
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - esteira-rabbitmq:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  esteira-pgdata:
+  esteira-rabbitmq:

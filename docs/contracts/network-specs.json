@@ -1,0 +1,15 @@
+{
+  "_comment": "Limites por rede, fonte: docs oficiais (ver documento de visão, seção Matriz). Revisar a cada trimestre.",
+  "YouTube":       { "aspect": "16:9", "maxDurationSeconds": 43200, "maxSizeBytes": 274877906944, "maxCaptionChars": 5000, "maxTitleChars": 100, "recommendedHashtags": 3, "hasPublicApi": true },
+  "YouTubeShorts": { "aspect": "9:16", "maxDurationSeconds": 180,   "maxSizeBytes": 274877906944, "maxCaptionChars": 5000, "maxTitleChars": 100, "recommendedHashtags": 3, "hasPublicApi": true },
+  "Instagram":     { "aspect": "9:16", "maxDurationSeconds": 900,   "maxSizeBytes": 1073741824,   "maxCaptionChars": 2200, "maxTitleChars": 0,   "recommendedHashtags": 5, "hasPublicApi": true },
+  "Facebook":      { "aspect": "9:16", "maxDurationSeconds": 90,    "maxSizeBytes": 1073741824,   "maxCaptionChars": 63206, "maxTitleChars": 0,  "recommendedHashtags": 5, "hasPublicApi": true },
+  "TikTok":        { "aspect": "9:16", "maxDurationSeconds": 600,   "maxSizeBytes": 4294967296,   "maxCaptionChars": 2200, "maxTitleChars": 0,   "recommendedHashtags": 5, "hasPublicApi": true },
+  "LinkedIn":      { "aspect": "9:16", "maxDurationSeconds": 1800,  "maxSizeBytes": 524288000,    "maxCaptionChars": 3000, "maxTitleChars": 0,   "recommendedHashtags": 5, "hasPublicApi": true },
+  "X":             { "aspect": "9:16", "maxDurationSeconds": 140,   "maxSizeBytes": 536870912,    "maxCaptionChars": 280,  "maxTitleChars": 0,   "recommendedHashtags": 2, "hasPublicApi": true },
+  "Threads":       { "aspect": "9:16", "maxDurationSeconds": 300,   "maxSizeBytes": 1073741824,   "maxCaptionChars": 500,  "maxTitleChars": 0,   "recommendedHashtags": 1, "hasPublicApi": true },
+  "Pinterest":     { "aspect": "9:16", "maxDurationSeconds": 900,   "maxSizeBytes": 2147483648,   "maxCaptionChars": 800,  "maxTitleChars": 100, "recommendedHashtags": 3, "hasPublicApi": true },
+  "Telegram":      { "aspect": "9:16", "maxDurationSeconds": 0,     "maxSizeBytes": 52428800,     "maxCaptionChars": 1024, "maxTitleChars": 0,   "recommendedHashtags": 0, "hasPublicApi": true },
+  "Kwai":          { "aspect": "9:16", "maxDurationSeconds": 57,    "maxSizeBytes": 0,            "maxCaptionChars": 2200, "maxTitleChars": 0,   "recommendedHashtags": 3, "hasPublicApi": false },
+  "WhatsApp":      { "aspect": "9:16", "maxDurationSeconds": 90,    "maxSizeBytes": 16777216,     "maxCaptionChars": 1024, "maxTitleChars": 0,   "recommendedHashtags": 0, "hasPublicApi": false }
+}

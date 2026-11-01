@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://esteira.dev/contracts/edl/v1",
+  "title": "Edl",
+  "description": "Plano de edição gerado pela IA e executado pelo render. Referências: auto-editor (timeline json), editly (layers), cut-as-code (keep list). Ranges em segundos, meio-abertos [in, out).",
+  "type": "object",
+  "required": ["version", "source", "keep", "layers", "params", "outputs"],
+  "properties": {
+    "version": { "const": 1 },
+    "source": { "type": "object", "required": ["objectKey", "durationSeconds", "fps"], "properties": {
+      "objectKey": { "type": "string" }, "durationSeconds": { "type": "number" }, "fps": { "type": "number" } } },
+    "styleTemplateId": { "type": ["string", "null"] },
+    "strategy": { "type": "string", "description": "Resumo em uma frase do que o plano faz e por quê." },
+    "keep": { "type": "array", "description": "Trechos mantidos, em ordem de programa.", "items": {
+      "type": "object", "required": ["in", "out"], "properties": {
+        "in": { "type": "number" }, "out": { "type": "number" },
+        "firstWord": { "type": "string" }, "lastWord": { "type": "string" },
+        "speed": { "type": "number", "default": 1 },
+        "reason": { "type": "string" } } } },
+    "layers": { "type": "array", "items": { "oneOf": [
+      { "type": "object", "required": ["type", "style"], "properties": { "type": { "const": "captions" },
+        "style": { "$ref": "#/$defs/captionStyle" } } },
+      { "type": "object", "required": ["type", "at", "kind"], "properties": { "type": { "const": "zoom" },
+        "at": { "type": "number" }, "kind": { "enum": ["punch", "ratchet", "kenburns"] },
+        "scale": { "type": "number", "default": 1.15 }, "durationSeconds": { "type": "number", "default": 0.35 } } },
+      { "type": "object", "required": ["type", "at", "text"], "properties": { "type": { "const": "title" },
+        "at": { "type": "number" }, "durationSeconds": { "type": "number" }, "text": { "type": "string" } } },
+      { "type": "object", "required": ["type", "at", "query"], "properties": { "type": { "const": "broll" },
+        "at": { "type": "number" }, "durationSeconds": { "type": "number" }, "query": { "type": "string" } } },
+      { "type": "object", "required": ["type", "bpm"], "properties": { "type": { "const": "music" },
+        "bpm": { "type": "number" }, "energy": { "enum": ["low", "medium", "high"] }, "cutOnBeat": { "type": "boolean" },
+        "loudnessLufs": { "type": "number", "default": -14 } } },
+      { "type": "object", "required": ["type", "at", "text"], "properties": { "type": { "const": "cta" },
+        "at": { "type": "number" }, "text": { "type": "string" } } } ] } },
+    "clips": { "type": "array", "description": "Cortes curtos candidatos (prompt de viralidade portado do AI-Youtube-Shorts-Generator).", "items": {
+      "type": "object", "required": ["title", "in", "out", "score"], "properties": {
+        "title": { "type": "string" }, "in": { "type": "number" }, "out": { "type": "number" },
+        "score": { "type": "number", "minimum": 0, "maximum": 100 },
+        "hookSentence": { "type": "string" }, "viralityReason": { "type": "string" } } } },
+    "params": { "type": "object", "properties": {
+      "splitGapSeconds": { "type": "number", "default": 0.6 },
+      "leadSeconds": { "type": "number", "default": 0.08 },
+      "trailSeconds": { "type": "number", "default": 0.12 },
+      "silenceThresholdDb": { "type": "number", "default": -35 },
+      "minSilenceSeconds": { "type": "number", "default": 0.5 } } },
+    "outputs": { "type": "array", "items": { "type": "object", "required": ["aspect"], "properties": {
+      "aspect": { "enum": ["9:16", "16:9", "1:1", "4:5"] },
+      "reframe": { "enum": ["face-track", "center", "scene-crop"], "default": "face-track" } } } },
+    "verify": { "type": "object", "description": "Metas que o render precisa bater, derivadas da style bible.", "properties": {
+      "cutsPerMinute": { "type": "number" }, "targetDurationSeconds": { "type": "number" }, "loudnessLufs": { "type": "number" } } }
+  },
+  "$defs": {
+    "captionStyle": { "type": "object", "properties": {
+      "mode": { "enum": ["word", "phrase"] }, "combineWithinMs": { "type": "integer", "default": 1200 },
+      "maxCharsPerLine": { "type": "integer", "default": 42 }, "position": { "enum": ["bottom", "center", "top", "face-safe"] },
+      "font": { "type": "string" }, "fontSize": { "type": "integer" },
+      "activeColor": { "type": "string" }, "inactiveColor": { "type": "string" }, "outline": { "type": "boolean" } } }
+  }
+}

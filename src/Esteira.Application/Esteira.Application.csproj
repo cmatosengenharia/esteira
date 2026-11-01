@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Camada Application: casos de uso, contratos (interfaces) e DTOs. -->
+  <ItemGroup>
+    <ProjectReference Include="../Esteira.Domain/Esteira.Domain.csproj" />
+  </ItemGroup>
+</Project>

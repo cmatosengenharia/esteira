@@ -1,0 +1,23 @@
+<Project>
+  <!-- Versões centralizadas. Só pacotes NuGet mainstream; nunca repos de referência (ver CLAUDE.md). -->
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="9.0.4" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.4" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.4" />
+    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+    <PackageVersion Include="MassTransit" Version="8.3.6" />
+    <PackageVersion Include="MassTransit.RabbitMQ" Version="8.3.6" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.4" />
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="9.0.4" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.4" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="9.0.4" />
+    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.4" />
+    <PackageVersion Include="Serilog.AspNetCore" Version="9.0.0" />
+    <PackageVersion Include="Serilog.Sinks.Console" Version="6.0.0" />
+    <PackageVersion Include="JsonSchema.Net" Version="7.3.4" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
+    <PackageVersion Include="xunit" Version="2.9.3" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.0.2" />
+    <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+  </ItemGroup>
+</Project>

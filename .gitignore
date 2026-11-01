@@ -1,0 +1,28 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.swp
+.vs/
+*.DotSettings.user
+TestResults/
+# Node
+node_modules/
+dist/
+.vite/
+npm-debug.log*
+# macOS
+.DS_Store
+._*
+.AppleDouble
+# Esteira
+models/
+data/
+samples/*.mp4
+samples/*.wav
+samples/*.aiff
+.run/
+*.log
+appsettings.*.local.json
+.env
