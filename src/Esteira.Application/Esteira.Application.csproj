@@ -7,4 +7,10 @@
     <!-- Só a abstração DbSet/SaveChanges; provider e configuração ficam na Infrastructure. -->
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- Contratos versionados viajam dentro do assembly; a fonte única continua em docs/contracts. -->
+    <EmbeddedResource Include="../../docs/contracts/edl.schema.json" LogicalName="contracts/edl.schema.json" />
+    <EmbeddedResource Include="../../docs/contracts/style-bible.schema.json" LogicalName="contracts/style-bible.schema.json" />
+    <EmbeddedResource Include="../../docs/contracts/network-specs.json" LogicalName="contracts/network-specs.json" />
+  </ItemGroup>
 </Project>

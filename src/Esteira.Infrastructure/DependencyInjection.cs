@@ -1,5 +1,8 @@
 using Esteira.Application.Abstractions;
+using Esteira.Application.Publishing;
+using Esteira.Infrastructure.Metering;
 using Esteira.Infrastructure.Persistence;
+using Esteira.Infrastructure.Stubs;
 using Esteira.Infrastructure.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -21,6 +24,10 @@ public static class DependencyInjection
 
         services.AddDbContext<EsteiraDbContext>(o => o.UseNpgsql(cs));
         services.AddScoped<IEsteiraDbContext>(sp => sp.GetRequiredService<EsteiraDbContext>());
+
+        services.AddSingleton<NetworkSpecCatalog>();
+        services.AddScoped<IUsageMeter, UsageMeter>();
+        services.AddSingleton<IStyleExtractor, NotImplementedStyleExtractor>();
         return services;
     }
 }

@@ -8,6 +8,7 @@
     <ProjectReference Include="../../src/Esteira.Application/Esteira.Application.csproj" />
     <ProjectReference Include="../../src/Esteira.Infrastructure/Esteira.Infrastructure.csproj" />
     <ProjectReference Include="../../src/Esteira.Connectors/Esteira.Connectors.csproj" />
+    <ProjectReference Include="../../src/Esteira.Workers/Esteira.Workers.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
@@ -16,5 +17,6 @@
     <PackageReference Include="coverlet.collector" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" />
+    <PackageReference Include="MassTransit" />
   </ItemGroup>
 </Project>
