@@ -34,6 +34,9 @@ public sealed class PlanConsumer(
         }
 
         job.EdlJson = await planner.PlanAsync(new PlanRequest(job, transcript, wavPath, styleBible), ct);
+        // cópia em arquivo ao lado dos masters, para inspeção e para o render de outras ferramentas
+        await using (var ms = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(job.EdlJson)))
+            await storage.PutAsync(ObjectKeys.Edl(job), ms, ct);
         return new RenderRequested(job.Id, job.TenantId);
     }
 }

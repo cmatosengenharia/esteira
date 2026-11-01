@@ -147,3 +147,16 @@ echo
 echo "EDL: curl -s $API_URL/jobs/$JOB_ID/edl -H 'Authorization: Bearer \$TOKEN'"
 echo "para parar tudo: scripts/stop.sh"
 [[ "$STAGE" == Rendered ]] || { echo; tail -60 "$RUN_DIR/workers.log"; exit 1; }
+
+# ---------- 8. Verificação do master ----------
+OUT=$(echo "$BODY" | json "d['outputs'][0]['localPath']")
+[[ -f "$OUT" ]] || fail "master não encontrado em $OUT"
+DIMS=$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 "$OUT")
+OUT_DUR=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$OUT")
+IN_DUR=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$INPUT")
+[[ "$DIMS" == "1080,1920" ]] || fail "master deveria ser 1080x1920, veio $DIMS"
+python3 -c "import sys; i,o=float(sys.argv[1]),float(sys.argv[2]); sys.exit(0 if 0 < o < i else 1)" "$IN_DUR" "$OUT_DUR" \
+  || fail "master ($OUT_DUR s) deveria ser mais curto que a entrada ($IN_DUR s)"
+ASS=$(ls data/work/*/captions-9x16.ass 2>/dev/null | head -1 || true)
+[[ -n "$ASS" ]] && echo "legendas: $(grep -c '^Dialogue' "$ASS") frases em $ASS"
+echo "OK: master 1080x1920, $OUT_DUR s (entrada $IN_DUR s)"

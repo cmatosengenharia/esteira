@@ -83,6 +83,14 @@ jobs:
           ESTEIRA_WHISPER_BIN: /home/runner/.local/bin/whisper-cli
           TIMEOUT_SECONDS: "900"
         run: bash scripts/demo.sh --no-docker --no-build
+      - name: Inspeciona o resultado
+        if: always()
+        run: |
+          echo "== job"; cat .run/last-job.json 2>/dev/null | python3 -m json.tool || true
+          echo "== EDL"; cat data/storage/*/jobs/*/edl.json 2>/dev/null || true
+          echo "== legendas"; cat data/work/*/captions-9x16.ass 2>/dev/null || true
+          echo "== master"; ffprobe -v error -show_entries stream=codec_type,codec_name,width,height,avg_frame_rate -show_entries format=duration,size -of compact data/storage/*/jobs/*/master-9x16.mp4 2>/dev/null || true
+          echo "== workers.log (fim)"; tail -40 .run/workers.log 2>/dev/null || true
       - name: Para tudo
         if: always()
         run: bash scripts/stop.sh --apps-only || true

@@ -22,6 +22,8 @@ public sealed class TranscribeConsumer(
         var transcript = await transcriber.TranscribeAsync(wavPath, languageHint: null, ct);
 
         job.TranscriptJson = JsonSerializer.Serialize(transcript, JsonDefaults.Options);
+        await using (var ms = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(job.TranscriptJson)))
+            await storage.PutAsync(ObjectKeys.Transcript(job), ms, ct);
         usage.RecordTranscribedMinutes(job, (job.DurationSeconds ?? transcript.DurationSeconds) / 60.0, "whisper.cpp small");
 
         return new PlanRequested(job.Id, job.TenantId);
