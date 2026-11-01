@@ -142,18 +142,7 @@ done
 echo "$BODY" > "$RUN_DIR/last-job.json"
 
 log "Resultado"
-echo "$BODY" | python3 -c '
-import sys, json
-d = json.load(sys.stdin)
-print("stage:", d["stage"], ("- " + d["failureReason"]) if d.get("failureReason") else "")
-print("tempo por etapa:")
-for t in d["timings"]:
-    print(f"  {t[\"stage\"]:<12} {t[\"durationMs\"] or 0:>8} ms")
-u = d["usage"]
-print(f"usage: llmTokens={u[\"llmTokens\"]} renderMinutes={u[\"renderMinutes\"]:.3f} transcribedMinutes={u[\"transcribedMinutes\"]:.3f}")
-for o in d["outputs"]:
-    print(f"saída {o[\"aspect\"]}: {o[\"localPath\"]} ({o[\"durationSeconds\"]} s, {o[\"sizeBytes\"]} bytes)")
-'
+echo "$BODY" | python3 scripts/print-job.py
 echo
 echo "EDL: curl -s $API_URL/jobs/$JOB_ID/edl -H 'Authorization: Bearer \$TOKEN'"
 echo "para parar tudo: scripts/stop.sh"
