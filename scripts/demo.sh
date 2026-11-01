@@ -1,0 +1,160 @@
+#!/usr/bin/env bash
+# Prova de ponta a ponta: sobe infra, API e Workers, gera (se preciso) um vídeo de 20 s, envia para POST /jobs
+# e acompanha até Stage=Rendered ou Failed. Funciona no Mac (say) e em Linux (espeak-ng).
+#
+# Uso: scripts/demo.sh [--no-docker] [--no-build] [arquivo.mp4]
+#   --no-docker  não toca no Docker (Postgres/RabbitMQ já estão de pé, ex.: services da CI)
+#   --no-build   não roda dotnet build (já compilado)
+set -euo pipefail
+cd "$(dirname "$0")/.."
+ROOT=$(pwd)
+RUN_DIR="$ROOT/.run"; mkdir -p "$RUN_DIR" samples data
+API_URL=${API_URL:-http://localhost:5080}
+TIMEOUT_SECONDS=${TIMEOUT_SECONDS:-600}
+USE_DOCKER=1; BUILD=1; INPUT=""
+for arg in "$@"; do
+  case "$arg" in
+    --no-docker) USE_DOCKER=0 ;;
+    --no-build) BUILD=0 ;;
+    *) INPUT="$arg" ;;
+  esac
+done
+
+log() { printf '\n\033[1;34m== %s\033[0m\n' "$*"; }
+fail() { echo "ERRO: $*" >&2; exit 1; }
+json() { python3 -c "import sys,json; d=json.load(sys.stdin); print($1)"; }
+
+# ---------- 1. Docker ----------
+if [[ $USE_DOCKER == 1 ]]; then
+  log "Docker"
+  if ! docker info >/dev/null 2>&1; then
+    if [[ -d /Applications/Docker.app ]]; then open -a Docker
+    elif command -v colima >/dev/null 2>&1; then colima start
+    else fail "Docker não está rodando (Docker.app ou colima)"; fi
+    for _ in $(seq 1 60); do docker info >/dev/null 2>&1 && break; sleep 2; done
+    docker info >/dev/null 2>&1 || fail "docker não respondeu"
+  fi
+  docker compose up -d postgres rabbitmq
+  log "Aguardando Postgres e RabbitMQ"
+  for _ in $(seq 1 60); do
+    pg=$(docker inspect -f '{{.State.Health.Status}}' esteira-postgres 2>/dev/null || echo starting)
+    rb=$(docker inspect -f '{{.State.Health.Status}}' esteira-rabbitmq 2>/dev/null || echo starting)
+    [[ "$pg" == healthy && "$rb" == healthy ]] && break
+    sleep 2
+  done
+  [[ "$pg" == healthy && "$rb" == healthy ]] || fail "infra não ficou saudável (postgres=$pg rabbitmq=$rb)"
+fi
+
+# ---------- 2. whisper ----------
+WHISPER_BIN=${ESTEIRA_WHISPER_BIN:-$(command -v whisper-cli || command -v whisper-cpp || true)}
+[[ -n "$WHISPER_BIN" ]] || fail "whisper.cpp não encontrado; rode scripts/check-env.sh"
+[[ -f models/ggml-small.bin ]] || fail "models/ggml-small.bin não encontrado; rode scripts/check-env.sh"
+export Media__WhisperPath="$WHISPER_BIN"
+export Media__WhisperModelPath="$ROOT/models/ggml-small.bin"
+export Media__StorageRoot="$ROOT/data/storage"
+export Media__WorkRoot="$ROOT/data/work"
+
+# ---------- 3. Build ----------
+if [[ $BUILD == 1 ]]; then
+  log "dotnet build"
+  dotnet build Esteira.sln -c Release --nologo -v q
+fi
+
+# ---------- 4. API e Workers ----------
+log "Iniciando API e Workers (logs em .run/)"
+bash scripts/stop.sh --apps-only >/dev/null 2>&1 || true
+export ASPNETCORE_ENVIRONMENT=Development DOTNET_ENVIRONMENT=Development
+( cd "$ROOT" && exec dotnet run --project src/Esteira.Api -c Release --no-build --no-launch-profile --urls "$API_URL" ) > "$RUN_DIR/api.log" 2>&1 &
+echo $! > "$RUN_DIR/api.pid"
+for _ in $(seq 1 90); do
+  curl -fsS "$API_URL/health" >/dev/null 2>&1 && break
+  kill -0 "$(cat "$RUN_DIR/api.pid")" 2>/dev/null || { tail -40 "$RUN_DIR/api.log"; fail "API caiu"; }
+  sleep 1
+done
+curl -fsS "$API_URL/health" >/dev/null || { tail -40 "$RUN_DIR/api.log"; fail "API não respondeu em $API_URL"; }
+( cd "$ROOT" && exec dotnet run --project src/Esteira.Workers -c Release --no-build --no-launch-profile ) > "$RUN_DIR/workers.log" 2>&1 &
+echo $! > "$RUN_DIR/workers.pid"
+sleep 3
+kill -0 "$(cat "$RUN_DIR/workers.pid")" 2>/dev/null || { tail -40 "$RUN_DIR/workers.log"; fail "Workers caíram"; }
+
+# ---------- 5. Vídeo de teste ----------
+if [[ -z "$INPUT" ]]; then
+  INPUT=$(ls samples/*.mp4 2>/dev/null | head -1 || true)
+fi
+if [[ -z "$INPUT" ]]; then
+  log "Gerando samples/demo.mp4 (20 s: fala com pausas + testsrc)"
+  TMP=$(mktemp -d)
+  SENTENCES=(
+    "Olá, esta é a esteira de vídeo. Ela recebe um vídeo bruto e devolve um vídeo editado."
+    "Primeiro ela transcreve o áudio com timestamps por palavra."
+    "Depois corta os silêncios e gera legendas por frase."
+    "No final, renderiza em nove por dezesseis com legenda queimada."
+  )
+  i=0; INPUTS=(); FILTER=""
+  for s in "${SENTENCES[@]}"; do
+    if command -v say >/dev/null 2>&1; then
+      say -v Luciana -o "$TMP/s$i.aiff" "$s" 2>/dev/null || say -o "$TMP/s$i.aiff" "$s"
+      ffmpeg -y -v error -i "$TMP/s$i.aiff" -ac 1 -ar 16000 "$TMP/s$i.wav"
+    elif command -v espeak-ng >/dev/null 2>&1; then
+      espeak-ng -v pt-br -s 150 -w "$TMP/s$i.wav" "$s"
+    else
+      fail "sem TTS (say ou espeak-ng) para gerar o vídeo de teste; passe um mp4 como argumento"
+    fi
+    INPUTS+=(-i "$TMP/s$i.wav")
+    i=$((i+1))
+  done
+  # concatena falas com 1.5 s de silêncio entre elas e 1 s no fim
+  n=${#SENTENCES[@]}; parts=""; k=0
+  for ((j=0; j<n; j++)); do
+    parts+="[$j:a]"
+    if (( j < n-1 )); then parts+="[sil$k]"; k=$((k+1)); fi
+  done
+  silences=""
+  for ((j=0; j<k; j++)); do silences+="anullsrc=r=16000:cl=mono,atrim=0:1.5[sil$j];"; done
+  ffmpeg -y -v error "${INPUTS[@]}" -filter_complex "${silences}${parts}concat=n=$((n+k)):v=0:a=1,apad=pad_dur=1[a]" -map "[a]" -ar 16000 -ac 1 "$TMP/speech.wav"
+  DUR=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$TMP/speech.wav")
+  ffmpeg -y -v error -f lavfi -i "testsrc=size=1280x720:rate=30" -i "$TMP/speech.wav" -t "$DUR" \
+    -c:v libx264 -preset veryfast -pix_fmt yuv420p -c:a aac -b:a 128k -shortest samples/demo.mp4
+  rm -rf "$TMP"
+  INPUT=samples/demo.mp4
+fi
+echo "vídeo de entrada: $INPUT ($(ffprobe -v error -show_entries format=duration -of csv=p=0 "$INPUT") s)"
+
+# ---------- 6. Seed + job ----------
+log "Seed de tenant/usuário"
+TOKEN=$(curl -fsS -X POST "$API_URL/dev/seed" -H 'Content-Type: application/json' -d '{}' | json "d['token']")
+log "POST /jobs"
+JOB=$(curl -fsS -X POST "$API_URL/jobs" -H "Authorization: Bearer $TOKEN" -F "file=@$INPUT" -F "targets=YouTubeShorts")
+JOB_ID=$(echo "$JOB" | json "d['id']")
+echo "job: $JOB_ID"
+
+# ---------- 7. Polling ----------
+log "Acompanhando (timeout ${TIMEOUT_SECONDS}s)"
+START=$(date +%s); LAST=""
+while :; do
+  BODY=$(curl -fsS "$API_URL/jobs/$JOB_ID" -H "Authorization: Bearer $TOKEN")
+  STAGE=$(echo "$BODY" | json "d['stage']")
+  [[ "$STAGE" != "$LAST" ]] && { echo "$(date +%H:%M:%S) stage=$STAGE"; LAST=$STAGE; }
+  [[ "$STAGE" == Rendered || "$STAGE" == Failed ]] && break
+  (( $(date +%s) - START > TIMEOUT_SECONDS )) && fail "timeout esperando o job (último stage: $STAGE)"
+  sleep 2
+done
+echo "$BODY" > "$RUN_DIR/last-job.json"
+
+log "Resultado"
+echo "$BODY" | python3 -c '
+import sys, json
+d = json.load(sys.stdin)
+print("stage:", d["stage"], ("- " + d["failureReason"]) if d.get("failureReason") else "")
+print("tempo por etapa:")
+for t in d["timings"]:
+    print(f"  {t[\"stage\"]:<12} {t[\"durationMs\"] or 0:>8} ms")
+u = d["usage"]
+print(f"usage: llmTokens={u[\"llmTokens\"]} renderMinutes={u[\"renderMinutes\"]:.3f} transcribedMinutes={u[\"transcribedMinutes\"]:.3f}")
+for o in d["outputs"]:
+    print(f"saída {o[\"aspect\"]}: {o[\"localPath\"]} ({o[\"durationSeconds\"]} s, {o[\"sizeBytes\"]} bytes)")
+'
+echo
+echo "EDL: curl -s $API_URL/jobs/$JOB_ID/edl -H 'Authorization: Bearer \$TOKEN'"
+echo "para parar tudo: scripts/stop.sh"
+[[ "$STAGE" == Rendered ]] || { echo; tail -60 "$RUN_DIR/workers.log"; exit 1; }

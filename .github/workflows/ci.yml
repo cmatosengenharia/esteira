@@ -21,3 +21,80 @@ jobs:
         run: dotnet build Esteira.sln --no-restore --configuration Release
       - name: Test
         run: dotnet test Esteira.sln --no-build --configuration Release --logger "trx;LogFileName=results.trx"
+
+  e2e:
+    # Esteira de ponta a ponta com vídeo real: Postgres + RabbitMQ como services, ffmpeg, whisper.cpp e o scripts/demo.sh.
+    runs-on: ubuntu-latest
+    needs: build-test
+    timeout-minutes: 30
+    env:
+      WHISPER_CPP_TAG: v1.7.6
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_USER: esteira, POSTGRES_PASSWORD: esteira, POSTGRES_DB: esteira }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U esteira -d esteira" --health-interval 5s --health-timeout 3s --health-retries 20
+      rabbitmq:
+        image: rabbitmq:3-management
+        env: { RABBITMQ_DEFAULT_USER: esteira, RABBITMQ_DEFAULT_PASS: esteira }
+        ports: ["5672:5672", "15672:15672"]
+        options: >-
+          --health-cmd "rabbitmq-diagnostics -q ping" --health-interval 5s --health-timeout 5s --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: ffmpeg e espeak-ng
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q ffmpeg espeak-ng
+          ffmpeg -version | head -1
+      - name: Cache whisper.cpp
+        id: cache-whisper
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/bin/whisper-cli
+          key: whisper-cli-${{ env.WHISPER_CPP_TAG }}-${{ runner.os }}-${{ runner.arch }}
+      - name: Compila whisper.cpp
+        if: steps.cache-whisper.outputs.cache-hit != 'true'
+        run: |
+          git clone --depth 1 --branch "$WHISPER_CPP_TAG" https://github.com/ggerganov/whisper.cpp /tmp/whisper.cpp
+          cmake -S /tmp/whisper.cpp -B /tmp/whisper.cpp/build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF
+          cmake --build /tmp/whisper.cpp/build --config Release -j"$(nproc)" --target whisper-cli
+          mkdir -p ~/.local/bin && install -m 0755 /tmp/whisper.cpp/build/bin/whisper-cli ~/.local/bin/whisper-cli
+      - name: Cache modelo small
+        id: cache-model
+        uses: actions/cache@v4
+        with:
+          path: models/ggml-small.bin
+          key: whisper-model-ggml-small-v1
+      - name: Baixa modelo small
+        if: steps.cache-model.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p models
+          curl -L --fail -o models/ggml-small.bin https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin
+      - name: Build
+        run: dotnet build Esteira.sln --configuration Release
+      - name: Demo ponta a ponta
+        env:
+          ESTEIRA_WHISPER_BIN: /home/runner/.local/bin/whisper-cli
+          TIMEOUT_SECONDS: "900"
+        run: bash scripts/demo.sh --no-docker --no-build
+      - name: Para tudo
+        if: always()
+        run: bash scripts/stop.sh --apps-only || true
+      - name: Publica resultado
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-${{ github.sha }}
+          if-no-files-found: warn
+          path: |
+            data/storage/**/master-*.mp4
+            data/work/**/*.ass
+            samples/demo.mp4
+            .run/*.log
+            .run/last-job.json
