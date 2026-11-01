@@ -1,0 +1,14 @@
+# Kit do círculo autoevolutivo (cmatosengenharia/circulo) para este repositório — lido por `circulo init <pasta> --cliente`.
+# Mesmas chaves de [tool.circulo] do pyproject; aqui porque o repositório não é Python (ADR 0003).
+nome = "esteira"
+repo = "cmatosengenharia/esteira"
+testes = "dotnet test Esteira.sln --nologo"
+lint = "dotnet build Esteira.sln --nologo -warnaserror"
+protegidos = [".github/", "CLAUDE.md", "docs/adr/0001-arquitetura-base.md", "docs/contracts/", "circulo.toml", "scripts/portoes.sh"]
+checks = ["build-test"]
+
+[etapas]
+# Portões do CLAUDE.md como comando (rodam no worktree do pedido; qualquer um vermelho barra o push):
+pedido = []
+desenvolvimento = ["dotnet build Esteira.sln --nologo"]
+pr = ["bash scripts/portoes.sh"]
