@@ -23,7 +23,7 @@ public sealed class WhisperCppTranscriber(ProcessRunner runner, IOptions<MediaOp
         var args = new List<string>
         {
             "-m", model, "-f", wavLocalPath, "-ojf", "-of", outPrefix,
-            "-ml", "1", "-sow", "-t", _o.WhisperThreads.ToString(), "-l", string.IsNullOrWhiteSpace(languageHint) ? "auto" : languageHint,
+            "-ml", "1", "-sow", "-t", _o.WhisperThreads.ToString(), "-l", string.IsNullOrWhiteSpace(languageHint) ? (string.IsNullOrWhiteSpace(_o.WhisperLanguage) ? "auto" : _o.WhisperLanguage) : languageHint,
             "-np",
         };
         var result = await runner.RunAsync(bin, args, ct);

@@ -11,6 +11,8 @@ public sealed class MediaOptions
     public string WhisperPath { get; set; } = string.Empty;
     public string WhisperModelPath { get; set; } = "./models/ggml-small.bin";
     public int WhisperThreads { get; set; } = 4;
+    /// <summary>Idioma padrão da transcrição ("auto" detecta). Fixar "pt" melhora muito em áudio ruidoso.</summary>
+    public string WhisperLanguage { get; set; } = "auto";
     /// <summary>Diretório de trabalho para arquivos temporários do render (ASS, listas).</summary>
     public string WorkRoot { get; set; } = "./data/work";
 }
