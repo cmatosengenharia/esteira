@@ -41,13 +41,14 @@ public static class CaptionGrouper
         }
         if (current.Count > 0) phrases.Add(Build(current));
 
-        // Estende cada frase até a próxima (sem buraco de tela vazia), com mínimo de 0.5 s.
+        // Sem piscar entre frases: se a próxima começa em menos de 0.3 s, segura a atual até lá; mínimo de 0.5 s na tela.
         for (var i = 0; i < phrases.Count; i++)
         {
             var p = phrases[i];
-            var minEnd = p.Start + 0.5;
             var nextStart = i + 1 < phrases.Count ? phrases[i + 1].Start : double.MaxValue;
-            var end = Math.Min(nextStart, Math.Max(p.End, minEnd));
+            var end = Math.Max(p.End, p.Start + 0.5);
+            if (nextStart - p.End < 0.3) end = nextStart;
+            end = Math.Min(end, nextStart);
             phrases[i] = p with { End = Math.Round(end, 3) };
         }
         return phrases;
