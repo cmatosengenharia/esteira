@@ -1,3 +1,4 @@
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Esteira.Application.Abstractions;
@@ -94,7 +95,7 @@ public sealed class EdlDocument
         if (TargetDurationSeconds is { } target)
             root["verify"] = new JsonObject { ["targetDurationSeconds"] = target };
 
-        return root.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
+        return root.ToJsonString(new JsonSerializerOptions { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
     }
 
     public static EdlDocument Parse(string json)

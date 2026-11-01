@@ -33,10 +33,11 @@ public class SilenceDetectorTests
         var keep = SilenceDetector.DetectKeep(wav, P);
 
         Assert.Equal(2, keep.Count);
+        // janelas de 1/30 s quantizam as bordas; margem de 0.08 s antes e 0.12 s depois
         Assert.Equal(0, keep[0].In, 2);
-        Assert.Equal(1 + P.TrailSeconds, keep[0].Out, 1);
-        Assert.Equal(2 - P.LeadSeconds, keep[1].In, 1);
-        Assert.Equal(3.5 + P.TrailSeconds, keep[1].Out, 1);
+        Assert.InRange(keep[0].Out, 1 + P.TrailSeconds - 0.01, 1 + P.TrailSeconds + 0.04);
+        Assert.InRange(keep[1].In, 2 - P.LeadSeconds - 0.04, 2 - P.LeadSeconds + 0.01);
+        Assert.InRange(keep[1].Out, 3.5 + P.TrailSeconds - 0.01, 3.5 + P.TrailSeconds + 0.04);
         Assert.Equal(5.5, wav.DurationSeconds, 3);
     }
 

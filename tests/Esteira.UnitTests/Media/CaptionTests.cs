@@ -23,9 +23,10 @@ public class CaptionTests
         var phrases = CaptionGrouper.Group(Fixed());
         var texts = phrases.Select(p => p.Text).ToList();
 
-        Assert.Equal(["Olá pessoal hoje", "vamos falar da esteira.", "Ela corta silêncio", "e legenda."], texts);
+        // janela de 1200 ms a partir do início da frase; "." fecha frase; pausa > 0.6 s fecha frase
+        Assert.Equal(["Olá pessoal hoje vamos", "falar da esteira.", "Ela corta silêncio e", "legenda."], texts);
         Assert.Equal(0.0, phrases[0].Start);
-        Assert.Equal(1.15, phrases[0].End); // estendida até a próxima frase
+        Assert.Equal(1.50, phrases[0].End); // estendida até a próxima frase
         Assert.Equal(2.60, phrases[1].End);  // não invade a pausa longa
         Assert.All(phrases, p => Assert.True(p.Text.Length <= 42));
     }
@@ -36,7 +37,7 @@ public class CaptionTests
         var words = Enumerable.Range(0, 10).Select(i => new TranscriptWord("palavra", i * 0.1, i * 0.1 + 0.08, 1, null)).ToList();
         var phrases = CaptionGrouper.Group(words, combineWithinMs: 60_000, maxCharsPerLine: 20);
         Assert.All(phrases, p => Assert.True(p.Text.Length <= 20));
-        Assert.Equal(4, phrases.Count); // "palavra palavra" (15) cabe, 3 não (23)
+        Assert.Equal(5, phrases.Count); // "palavra palavra" (15) cabe, 3 não (23)
     }
 
     [Fact]
@@ -61,7 +62,7 @@ public class CaptionTests
         Assert.Contains("PlayResX: 1080", ass);
         Assert.Contains("Style: Default,Arial,64,&H00FFFFFF,&H0000D4FF,", ass);
         Assert.Equal(phrases.Count, ass.Split('\n').Count(l => l.StartsWith("Dialogue:")));
-        Assert.Contains("Dialogue: 0,0:00:00.00,0:00:01.15,Default,,0,0,0,,Olá pessoal hoje", ass);
+        Assert.Contains("Dialogue: 0,0:00:00.00,0:00:01.50,Default,,0,0,0,,Olá pessoal hoje vamos", ass);
         Assert.Equal("&H0000D4FF", AssWriter.ToAssColor("#FFD400"));
         Assert.Equal("1:01:01.50", AssWriter.Time(3661.5));
     }
