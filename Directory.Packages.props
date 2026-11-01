@@ -1,23 +1,27 @@
 <Project>
-  <!-- Versões centralizadas. Só pacotes NuGet mainstream; nunca repos de referência (ver CLAUDE.md). -->
+  <!-- Versões centralizadas. Só pacotes NuGet mainstream; nunca repos de referência (ver CLAUDE.md).
+       Patch flutuante (x.y.*) para o restore sempre pegar a última correção de segurança da linha. -->
   <ItemGroup>
-    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.0" />
-    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
-    <PackageVersion Include="MassTransit" Version="8.3.6" />
-    <PackageVersion Include="MassTransit.RabbitMQ" Version="8.3.6" />
-    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
-    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.0" />
-    <PackageVersion Include="Serilog.AspNetCore" Version="9.0.0" />
-    <PackageVersion Include="Serilog.Sinks.Console" Version="6.0.0" />
-    <PackageVersion Include="JsonSchema.Net" Version="7.3.4" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
-    <PackageVersion Include="xunit" Version="2.9.3" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="3.0.2" />
-    <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.*" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.*" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.*" />
+    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.*" />
+    <PackageVersion Include="MassTransit" Version="8.*" />
+    <PackageVersion Include="MassTransit.RabbitMQ" Version="8.*" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.*" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.*" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.*" />
+    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.*" />
+    <PackageVersion Include="Serilog.AspNetCore" Version="9.*" />
+    <PackageVersion Include="Serilog.Sinks.Console" Version="6.*" />
+    <PackageVersion Include="JsonSchema.Net" Version="7.*" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.*" />
+    <PackageVersion Include="xunit" Version="2.9.*" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.*" />
+    <PackageVersion Include="coverlet.collector" Version="6.*" />
+    <!-- Transitivas com CVE em versões antigas: fixa a linha corrigida. -->
+    <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.*" />
+    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="10.0.*" />
+    <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.*" />
   </ItemGroup>
 </Project>
