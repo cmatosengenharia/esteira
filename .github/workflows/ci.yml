@@ -15,6 +15,8 @@ jobs:
           dotnet-version: 10.0.x
       - name: Restore
         run: dotnet restore Esteira.sln
+      - name: Versões resolvidas
+        run: dotnet list Esteira.sln package --include-transitive | grep -E "^   > " | awk '{print $2, $NF}' | sort -u
       - name: Build
         run: dotnet build Esteira.sln --no-restore --configuration Release
       - name: Test

@@ -1,4 +1,7 @@
 <Project>
+  <PropertyGroup>
+    <CentralPackageFloatingVersionsEnabled>true</CentralPackageFloatingVersionsEnabled>
+  </PropertyGroup>
   <!-- Versões centralizadas. Só pacotes NuGet mainstream; nunca repos de referência (ver CLAUDE.md).
        Patch flutuante (x.y.*) para o restore sempre pegar a última correção de segurança da linha. -->
   <ItemGroup>
