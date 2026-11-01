@@ -1,4 +1,5 @@
-# Só infraestrutura. API e Workers rodam no Mac com `dotnet run`.
+# Infra sempre sobe (postgres, rabbitmq). API e Workers rodam no Mac com `dotnet run`
+# OU dentro do Docker com `docker compose --profile app up --build` (mesma imagem da CI).
 services:
   postgres:
     image: postgres:16
@@ -34,6 +35,48 @@ services:
       timeout: 5s
       retries: 20
 
+  api:
+    profiles: ["app"]
+    build: { context: ., dockerfile: Dockerfile.dev }
+    image: esteira-dev
+    container_name: esteira-api
+    command: dotnet run --project src/Esteira.Api --no-launch-profile
+    working_dir: /src
+    environment:
+      ASPNETCORE_URLS: http://0.0.0.0:5080
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Postgres: Host=postgres;Database=esteira;Username=esteira;Password=esteira
+      RabbitMq__Host: rabbitmq
+      RabbitMq__Username: esteira
+      RabbitMq__Password: esteira
+    ports:
+      - "5080:5080"
+    volumes:
+      - .:/src
+      - esteira-nuget:/root/.nuget/packages
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+
+  workers:
+    profiles: ["app"]
+    image: esteira-dev
+    container_name: esteira-workers
+    command: dotnet run --project src/Esteira.Workers
+    working_dir: /src
+    environment:
+      DOTNET_ENVIRONMENT: Development
+      ConnectionStrings__Postgres: Host=postgres;Database=esteira;Username=esteira;Password=esteira
+      RabbitMq__Host: rabbitmq
+      RabbitMq__Username: esteira
+      RabbitMq__Password: esteira
+    volumes:
+      - .:/src
+      - esteira-nuget:/root/.nuget/packages
+    depends_on:
+      api: { condition: service_started }
+
 volumes:
   esteira-pgdata:
   esteira-rabbitmq:
+  esteira-nuget:

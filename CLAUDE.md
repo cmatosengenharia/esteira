@@ -4,7 +4,7 @@ Plataforma SaaS que pega um vídeo viral de referência, extrai o molde de ediç
 
 ## Arquitetura (não negociar sem ADR)
 
-- **.NET 9, Clean Architecture**: `Domain` (entidades, sem dependências) → `Application` (casos de uso, interfaces) → `Infrastructure` (EF Core/Postgres, RabbitMQ, storage, ffmpeg, LLM) → `Api` (ASP.NET Core) e `Workers` (um `BackgroundService` por etapa da esteira).
+- **.NET 10 (LTS), Clean Architecture** (ADR 0002: migrado de .NET 9, fora de suporte): `Domain` (entidades, sem dependências) → `Application` (casos de uso, interfaces) → `Infrastructure` (EF Core/Postgres, RabbitMQ, storage, ffmpeg, LLM) → `Api` (ASP.NET Core) e `Workers` (um `BackgroundService` por etapa da esteira).
 - **Orientada a eventos**: a API grava e publica mensagem; cada worker consome uma fila, é idempotente e publica o evento da próxima etapa. Nunca encadear workers por chamada direta.
 - **Multi-tenant por `TenantId`** em toda entidade e toda query (filtro global no `DbContext`). Nunca uma query sem tenant.
 - **Orçamento por job**: todo job carrega limite de tokens e de minutos de render; o worker aborta e registra `BudgetExceeded` em vez de gerar custo sem teto.

@@ -5,10 +5,10 @@ do cliente e publica em todas as redes no formato de cada uma. Regras de arquite
 
 ## Setup no Mac (Apple Silicon)
 
-Pré-requisitos (sem sudo): Homebrew, .NET SDK 9, ffmpeg, Node 22+, Docker (Docker.app ou colima).
+Pré-requisitos (sem sudo): Homebrew, .NET SDK 10, ffmpeg, Node 22+, Docker (Docker.app ou colima).
 
 ```bash
-brew install --cask dotnet-sdk@9
+brew install dotnet
 brew install ffmpeg node@22 whisper-cpp
 brew install --cask docker        # ou: brew install colima docker docker-compose
 ```
@@ -54,3 +54,18 @@ docs/contracts              edl.schema.json, style-bible.schema.json, network-sp
 docs/adr                    decisões de arquitetura
 scripts                     check-env.sh, bootstrap.sh, demo.sh, stop.sh
 ```
+
+## Tudo no Docker (alternativa)
+
+A mesma imagem da CI (`Dockerfile.dev`: SDK 10 + ffmpeg + whisper.cpp) sobe API e workers junto com a infra:
+
+```bash
+docker compose --profile app up --build
+```
+
+O código é montado em `/src`, então edições locais valem dentro do container. O modelo do whisper continua em `models/`.
+
+## Fluxo de trabalho
+
+A cópia de trabalho do Claude é o clone na nuvem; ele faz push na `main` e a CI (`.github/workflows/ci.yml`) compila,
+testa e roda a esteira de ponta a ponta. No Mac, só `git pull`.

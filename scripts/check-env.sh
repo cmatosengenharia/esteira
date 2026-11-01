@@ -13,7 +13,7 @@ echo "== Versões"
 need dotnet dotnet-sdk
 DOTNET_VER=$(dotnet --version)
 echo "dotnet $DOTNET_VER"
-[[ "$DOTNET_VER" == 9.* ]] || fail "dotnet precisa ser 9.x (atual: $DOTNET_VER). brew install --cask dotnet-sdk@9"
+[[ "$DOTNET_VER" == 10.* ]] || fail "dotnet precisa ser 10.x (atual: $DOTNET_VER). brew install dotnet"
 
 need ffmpeg ffmpeg; ffmpeg -version | head -1
 need ffprobe ffmpeg; ffprobe -version | head -1

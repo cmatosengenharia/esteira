@@ -1,0 +1,23 @@
+# Imagem de desenvolvimento/CI da Esteira: SDK .NET 10 + ffmpeg + whisper.cpp (MIT) + TTS para vídeos de teste.
+# Usada pelo profile `app` do docker-compose e pela CI. O modelo do whisper fica em volume (models/), fora da imagem.
+FROM mcr.microsoft.com/dotnet/sdk:10.0
+
+ARG WHISPER_CPP_TAG=v1.7.6
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ffmpeg espeak-ng git cmake build-essential curl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# whisper.cpp como binário local (dependência de runtime permitida pelo CLAUDE.md: "Whisper como serviço").
+RUN git clone --depth 1 --branch ${WHISPER_CPP_TAG} https://github.com/ggerganov/whisper.cpp /opt/whisper.cpp \
+    && cmake -S /opt/whisper.cpp -B /opt/whisper.cpp/build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF \
+    && cmake --build /opt/whisper.cpp/build --config Release -j"$(nproc)" --target whisper-cli \
+    && install -m 0755 /opt/whisper.cpp/build/bin/whisper-cli /usr/local/bin/whisper-cli \
+    && rm -rf /opt/whisper.cpp
+
+WORKDIR /src
+ENV DOTNET_CLI_TELEMETRY_OPTOUT=1 \
+    DOTNET_NOLOGO=1 \
+    ESTEIRA_WHISPER_BIN=/usr/local/bin/whisper-cli \
+    ESTEIRA_WHISPER_MODEL=/src/models/ggml-small.bin \
+    ESTEIRA_STORAGE_ROOT=/src/data/storage

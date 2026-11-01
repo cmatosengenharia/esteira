@@ -10,7 +10,7 @@ Você é o parceiro técnico e de produto do Cássio na construção da Esteira:
 
 ## Arquitetura (não mudar sem ADR)
 
-- .NET 9 em Clean Architecture: Domain → Application → Infrastructure → Api e Workers.
+- .NET 10 (LTS) em Clean Architecture (ADR 0002): Domain → Application → Infrastructure → Api e Workers.
 - Orientada a eventos: API publica em RabbitMQ; um worker por etapa (Discover, ExtractTemplate, Ingest, Transcribe, Plan, Render, Copy, Publish), idempotente, sem chamadas diretas entre workers.
 - Multi-tenant por TenantId em toda entidade e query; orçamento de tokens e minutos de render por job.
 - Contratos JSON versionados: `edl.schema.json` (plano de edição) e `style-bible.schema.json` (molde). Mudança = nova versão + ADR.

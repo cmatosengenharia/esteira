@@ -6,7 +6,7 @@
 
 ## Decisões
 
-### 1. .NET 9 em Clean Architecture
+### 1. .NET em Clean Architecture (versão: ver ADR 0002)
 `Domain` (entidades, sem dependências) → `Application` (casos de uso, interfaces, DTOs) → `Infrastructure`
 (EF Core/Postgres, RabbitMQ, storage, ffmpeg, whisper, LLM) → `Api` (ASP.NET Core) e `Workers` (um
 `BackgroundService`/consumer por etapa). `Connectors` fica ao lado de `Infrastructure`, dependendo só de `Application`.
