@@ -58,6 +58,7 @@ app.UseAuthorization();
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" })).AllowAnonymous();
 app.MapJobsEndpoints();
+app.MapMetricsEndpoints();
 if (app.Environment.IsDevelopment())
     app.MapDevEndpoints();
 
