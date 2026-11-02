@@ -4,16 +4,19 @@ using Esteira.Infrastructure.Media.Audio;
 namespace Esteira.Infrastructure.Media.Planning;
 
 /// <summary>
-/// Erros de fala a partir da transcrição por palavra: tomada repetida (n-grama de 4+ palavras dito de novo em menos de 10 s:
-/// a primeira é o erro, fica a segunda) e hesitação isolada ("é…", "hã", "tipo" com pausa > 0,6 s antes e depois).
+/// Erros de fala a partir da transcrição por palavra: tomada repetida (n-grama de 4+ palavras dito de novo em menos de 10 s,
+/// com pausa >= 0,2 s antes do recomeço: a primeira é o erro, fica a segunda; o corte termina com a mesma folga de entrada
+/// do SilenceDetector) e hesitação isolada ("é…", "hã", "tipo" com pausa > 0,6 s antes e depois).
 /// Custo: 0 tokens.
 /// </summary>
 public static class SpeechErrorDetector
 {
     private const int MinRepeatWords = 4;
     private const double RepeatWindowSeconds = 10;
+    private const double RetakePauseSeconds = 0.2;
     private const double HesitationPauseSeconds = 0.6;
     private const double MinClipSeconds = 0.15;
+    private static readonly double RetakeLeadSeconds = new EdlParams().LeadSeconds;
     private static readonly HashSet<string> Hesitations = ["é", "hã", "tipo"];
 
     /// <summary>Trechos a remover, em ordem, com o motivo ("repetição" ou "hesitação").</summary>
@@ -28,8 +31,9 @@ public static class SpeechErrorDetector
             var next = i + 1;
             for (var j = i + MinRepeatWords; j + MinRepeatWords <= words.Count && words[j].Start - words[i].Start < RepeatWindowSeconds; j++)
             {
+                if (words[j].Start - words[j - 1].End < RetakePauseSeconds) continue; // sem pausa é repetição intencional
                 if (!Enumerable.Range(0, MinRepeatWords).All(k => norm[i + k].Length > 0 && norm[i + k] == norm[j + k])) continue;
-                cuts.Add((new TimeRange(words[i].Start, words[j].Start), "repetição"));
+                cuts.Add((new TimeRange(words[i].Start, Math.Round(words[j].Start - RetakeLeadSeconds, 3)), "repetição"));
                 next = j; // continua da segunda tomada, que fica
                 break;
             }

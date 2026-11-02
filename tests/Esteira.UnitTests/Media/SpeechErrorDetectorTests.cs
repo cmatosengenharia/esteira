@@ -23,11 +23,50 @@ public class SpeechErrorDetectorTests
         var cuts = SpeechErrorDetector.DetectCuts(WithErrors());
 
         Assert.Equal(
-            [(new TimeRange(0.00, 1.80), "repetição"), (new TimeRange(4.60, 4.90), "hesitação")],
+            [(new TimeRange(0.00, 1.72), "repetição"), (new TimeRange(4.60, 4.90), "hesitação")],
             cuts);
 
         var keep = SpeechErrorDetector.Subtract([new TimeRange(0, 6.6)], cuts.Select(c => c.Range).ToList());
-        Assert.Equal([new TimeRange(1.80, 4.60), new TimeRange(4.90, 6.6)], keep);
+        Assert.Equal([new TimeRange(1.72, 4.60), new TimeRange(4.90, 6.6)], keep);
+    }
+
+    [Fact]
+    public void Retake_cut_ends_one_lead_before_the_second_take_using_the_edl_default()
+    {
+        var words = WithErrors();
+        var secondTakeStart = words[5].Start; // "vamos" do recomeço, em 1.80 s
+
+        var cut = Assert.Single(SpeechErrorDetector.DetectCuts(words), c => c.Kind == "repetição");
+
+        Assert.Equal(secondTakeStart - new EdlParams().LeadSeconds, cut.Range.Out, 3);
+        Assert.True(cut.Range.Out > words[4].End, "o corte deve terminar depois da última palavra da tomada errada");
+    }
+
+    [Fact]
+    public void Intentional_repetition_without_pause_is_not_cut()
+    {
+        // "não é não é não é" dito de uma vez, sem pausa (gap de 0.05 s) antes da segunda ocorrência do n-grama.
+        IReadOnlyList<TranscriptWord> words =
+        [
+            new("isso", 0.00, 0.20, 1, null), new("aqui", 0.25, 0.45, 1, null), new("é", 0.50, 0.60, 1, null), new("ouro", 0.65, 0.95, 1, null),
+            new("isso", 1.00, 1.20, 1, null), new("aqui", 1.25, 1.45, 1, null), new("é", 1.50, 1.60, 1, null), new("ouro", 1.65, 1.95, 1, null),
+        ];
+
+        Assert.Empty(SpeechErrorDetector.DetectCuts(words));
+    }
+
+    [Fact]
+    public void Same_repetition_after_a_pause_is_a_retake()
+    {
+        // Mesmas palavras do teste acima, mas com pausa de 0.25 s antes da segunda ocorrência.
+        IReadOnlyList<TranscriptWord> words =
+        [
+            new("isso", 0.00, 0.20, 1, null), new("aqui", 0.25, 0.45, 1, null), new("é", 0.50, 0.60, 1, null), new("ouro", 0.65, 0.95, 1, null),
+            new("isso", 1.20, 1.40, 1, null), new("aqui", 1.45, 1.65, 1, null), new("é", 1.70, 1.80, 1, null), new("ouro", 1.85, 2.15, 1, null),
+        ];
+
+        var cut = Assert.Single(SpeechErrorDetector.DetectCuts(words));
+        Assert.Equal((new TimeRange(0.00, 1.12), "repetição"), cut);
     }
 
     [Fact]

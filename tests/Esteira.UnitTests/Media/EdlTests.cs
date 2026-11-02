@@ -55,7 +55,7 @@ public class EdlTests
 
             Assert.Empty(EdlValidator.Validate(json));
             var edl = EdlDocument.Parse(json);
-            Assert.Equal([new TimeRange(1.80, 4.60), new TimeRange(4.90, 6.6)], edl.Keep);
+            Assert.Equal([new TimeRange(1.72, 4.60), new TimeRange(4.90, 6.6)], edl.Keep);
             Assert.Contains("1 repetição(ões)", edl.Strategy);
             Assert.Contains("1 hesitação(ões)", edl.Strategy);
             Assert.Contains("\"firstWord\": \"vamos\"", json);
