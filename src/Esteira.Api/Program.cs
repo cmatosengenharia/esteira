@@ -51,6 +51,11 @@ if (app.Environment.IsDevelopment())
     await scope.ServiceProvider.GetRequiredService<EsteiraDbContext>().Database.MigrateAsync();
 }
 
+// Interface web (web/ → src/Esteira.Api/wwwroot no build). Sem wwwroot, a API continua só API.
+var wwwroot = Path.Combine(app.Environment.ContentRootPath, "wwwroot");
+var temWeb = File.Exists(Path.Combine(wwwroot, "index.html"));
+if (temWeb) { app.UseDefaultFiles(); app.UseStaticFiles(); }
+
 app.UseSerilogRequestLogging();
 app.UseAuthentication();
 app.UseMiddleware<TenantResolutionMiddleware>();
@@ -61,5 +66,7 @@ app.MapJobsEndpoints();
 app.MapMetricsEndpoints();
 if (app.Environment.IsDevelopment())
     app.MapDevEndpoints();
+if (temWeb)
+    app.MapFallbackToFile("index.html").AllowAnonymous();
 
 app.Run();

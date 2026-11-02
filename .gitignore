@@ -26,3 +26,5 @@ samples/*.aiff
 *.log
 appsettings.*.local.json
 .env
+# build da interface web (web/ → API)
+src/Esteira.Api/wwwroot/

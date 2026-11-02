@@ -57,6 +57,20 @@ Tudo no Docker, com a mesma imagem da CI (`Dockerfile.dev`: SDK 10 + ffmpeg + wh
 docker compose --profile app up --build
 ```
 
+## Interface web
+
+`web/`: Vite + React + TypeScript, CSS puro com os tokens do design system **Círculo** (Primer; `web/src/tokens.css`),
+sem fonte externa. Telas: entrar (`/dev/seed`, só em Development), vídeos, novo vídeo, detalhe (etapas, master, shorts
+com player e download, custo) e semana (`/metrics/weekly`). O build vai para `src/Esteira.Api/wwwroot` (fora do git) e
+a API serve tudo na mesma origem; sem `wwwroot`, a API continua só API.
+
+```bash
+cd web && npm ci && npm run dev      # http://localhost:5173 com proxy para a API em :5080
+cd web && npm run build              # gera src/Esteira.Api/wwwroot; depois dotnet run --project src/Esteira.Api
+```
+
+Download das saídas: `GET /jobs/{id}/outputs/{index}` (bearer), usado pela interface para montar o player.
+
 ## Testes
 
 `dotnet test` roda 29 testes xUnit: isolamento por tenant (SQLite em memória), semântica dos workers (harness em

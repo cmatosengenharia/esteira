@@ -1,0 +1,33 @@
+/* Tokens do design system Círculo (claude.ai/artifact/Wa57gL2nVhzRb6mjKTxnYW, project/tokens.json v1), sobre os primitives do Primer.
+   Nenhuma página define cor própria: use sempre o token. */
+:root {
+  --bg: #f6f8fa; --surface: #ffffff; --line: #d1d9e0; --border: #59636e; --hover: #eff2f5;
+  --ink: #1f2328; --muted: #59636e;
+  --jev: #8250df; --jev-soft: #fbefff; --llm: #9a6700; --llm-soft: #fff8c5;
+  --ok: #1a7f37; --ok-soft: #dafbe1; --bad: #d1242f; --bad-soft: #ffebe9;
+  --idle: #59636e; --gh: #1f2328; --node: #ffffff;
+  --accent: #0969da; --on-accent: #ffffff; --primary: #1f883d; --on-primary: #ffffff;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px;
+  --radius-sm: 6px; --radius-lg: 12px; --radius-pill: 999px;
+  --shadow-botao: 0 1px 0 rgba(31, 35, 40, 0.04);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1117; --surface: #151b23; --line: #3d444d; --border: #9198a1; --hover: #1c232c;
+    --ink: #f0f6fc; --muted: #9198a1;
+    --jev: #ab7df8; --jev-soft: #2a1f47; --llm: #d29922; --llm-soft: #372e12;
+    --ok: #3fb950; --ok-soft: #12361f; --bad: #f85149; --bad-soft: #3c1a1d;
+    --idle: #9198a1; --gh: #f0f6fc; --node: #1c232c;
+    --accent: #1f6feb; --primary: #238636;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1117; --surface: #151b23; --line: #3d444d; --border: #9198a1; --hover: #1c232c;
+  --ink: #f0f6fc; --muted: #9198a1;
+  --jev: #ab7df8; --jev-soft: #2a1f47; --llm: #d29922; --llm-soft: #372e12;
+  --ok: #3fb950; --ok-soft: #12361f; --bad: #f85149; --bad-soft: #3c1a1d;
+  --idle: #9198a1; --gh: #f0f6fc; --node: #1c232c;
+  --accent: #1f6feb; --primary: #238636;
+}

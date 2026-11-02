@@ -83,6 +83,18 @@ public static class JobsEndpoints
             return job?.TranscriptJson is null ? Results.NotFound() : Results.Content(job.TranscriptJson, "application/json");
         });
 
+        // Download de uma saída (master ou short) pelo índice em `outputs`; a interface web busca com o bearer e monta o blob.
+        group.MapGet("/{id:guid}/outputs/{index:int}", async (Guid id, int index, IEsteiraDbContext db, IObjectStorage storage, CancellationToken ct) =>
+        {
+            var job = await db.VideoJobs.SingleOrDefaultAsync(j => j.Id == id, ct);
+            if (job is null || index < 0 || index >= job.Outputs.Count) return Results.NotFound();
+            var output = job.Outputs[index];
+            if (!await storage.ExistsAsync(output.ObjectKey, ct)) return Results.NotFound();
+            var name = OutputFiles.FileName(output.ObjectKey);
+            var stream = await storage.OpenReadAsync(output.ObjectKey, ct);
+            return Results.Stream(stream, OutputFiles.ContentType(name), fileDownloadName: name, enableRangeProcessing: true);
+        });
+
         return app;
     }
 

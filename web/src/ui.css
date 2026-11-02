@@ -1,0 +1,59 @@
+/* Componentes do Círculo (Botão, Rótulo/chip, Cartão/painel, Selo, Nav do topo), copiados dos previews do design system. */
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/21px var(--font-sans); }
+a { color: var(--accent); }
+code, .mono { font: 12.5px/18px var(--font-mono); }
+h1 { font-size: 26px; line-height: 32px; font-weight: 800; margin: 0 0 var(--space-4); }
+h2 { font-size: 16px; line-height: 24px; font-weight: 700; margin: 0 0 var(--space-2); }
+.secao { font-size: 12px; line-height: 18px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; color: var(--muted); margin: var(--space-5) 0 var(--space-2); }
+.legenda { font-size: 12.5px; line-height: 18px; color: var(--muted); }
+.kpi { background: var(--bg); border-radius: 8px; padding: 8px 12px; }
+.kpi span { display: block; color: var(--muted); font-size: 12.5px; }
+.kpi b { font-size: 26px; line-height: 30px; font-weight: 800; }
+
+.topo { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-4); background: var(--surface); border-bottom: 1.5px solid var(--line); }
+.topo .marca { font-weight: 800; margin-right: var(--space-3); color: var(--ink); text-decoration: none; }
+.topo .link { color: var(--muted); font-weight: 600; text-decoration: none; padding: 7px 11px; border-radius: 8px; border: 1.5px solid transparent; }
+.topo .link.atual { color: var(--ink); background: var(--bg); border-color: var(--border); }
+.topo .estado { margin-left: auto; color: var(--muted); font-size: 12.5px; }
+main { max-width: 1040px; margin: 0 auto; padding: var(--space-5) var(--space-4) 64px; }
+
+.btn { font: inherit; font-weight: 500; min-height: 32px; padding: 5px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg); color: var(--ink); box-shadow: var(--shadow-botao); cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: var(--space-1); }
+.btn:hover { background: var(--hover); border-color: var(--ink); }
+.btn.primary { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+.btn.perigo { color: var(--bad); }
+.btn.perigo:hover { background: var(--bad-soft); border-color: var(--bad); }
+.btn:disabled { background: var(--bg); color: var(--muted); border: 1px dashed var(--border); cursor: not-allowed; }
+.btn:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.chip { display: inline-block; border: 1px solid currentColor; border-radius: var(--radius-pill); font-size: 12px; font-weight: 500; line-height: 18px; padding: 0 7px; white-space: nowrap; }
+.chip.ok { color: var(--ok); background: var(--ok-soft); }
+.chip.jev { color: var(--jev); background: var(--jev-soft); }
+.chip.llm { color: var(--llm); background: var(--llm-soft); }
+.chip.bad { color: var(--bad); background: var(--bad-soft); }
+.chip.neutro { color: var(--muted); }
+
+.panel { background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--radius-lg); padding: 14px 16px; }
+.panel.alerta { border-left: 5px solid var(--bad); }
+.panel.atencao { border-left: 5px solid var(--llm); }
+.grid { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.linha { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
+.selo { display: inline-block; min-width: 18px; padding: 0 6px; margin-left: 6px; border-radius: var(--radius-pill); background: var(--jev); color: var(--surface); font-size: 11.5px; font-weight: 800; text-align: center; }
+.selo.urg { background: var(--bad); }
+
+table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12px; letter-spacing: 0.6px; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+tr:last-child td { border-bottom: 0; }
+tr.clicavel { cursor: pointer; } tr.clicavel:hover td { background: var(--hover); }
+
+label { display: block; font-weight: 600; margin-bottom: var(--space-1); }
+input[type="text"], input[type="email"], input[type="number"], select { font: inherit; min-height: 32px; padding: 5px 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--ink); width: 100%; }
+input[type="file"] { font: inherit; }
+.campo { margin-bottom: var(--space-4); }
+.etapas { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--space-2); }
+.etapa { background: var(--bg); border-radius: 8px; padding: 8px 10px; border: 1.5px solid var(--line); }
+.etapa.feita { border-color: var(--ok); } .etapa.atual { border-color: var(--jev); } .etapa.falhou { border-color: var(--bad); }
+.etapa b { display: block; font-size: 12.5px; } .etapa span { color: var(--muted); font-size: 12.5px; }
+.erro { color: var(--bad); white-space: pre-wrap; font: 12.5px/18px var(--font-mono); }
+@media (max-width: 640px) { .topo .link { padding: 7px 8px; } main { padding: var(--space-4) var(--space-4) 48px; } }
