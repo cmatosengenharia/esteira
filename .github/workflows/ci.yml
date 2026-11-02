@@ -19,6 +19,8 @@ jobs:
         run: dotnet list Esteira.sln package --include-transitive | grep -E "^   > " | awk '{print $2, $NF}' | sort -u
       - name: Build
         run: dotnet build Esteira.sln --no-restore --configuration Release
+      - name: Portões do CLAUDE.md
+        run: bash scripts/portoes.sh
       - name: Test
         run: dotnet test Esteira.sln --no-build --configuration Release --logger "trx;LogFileName=results.trx"
 

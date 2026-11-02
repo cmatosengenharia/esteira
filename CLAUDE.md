@@ -25,6 +25,15 @@ Plataforma SaaS que pega um vídeo viral de referência, extrai o molde de ediç
 - Commits em português, imperativo. PR precisa passar no checklist de licença (`docs/PR_CHECKLIST.md`).
 - Idioma do código e comentários: inglês nos identificadores, português nas docs.
 
+## O círculo autoevolutivo trabalha aqui (ADR 0003)
+
+- O loop (cmatosengenharia/circulo) recebe pedidos para este repositório e entrega cada um numa branch `circulo/<n>`
+  com PR: plano antes do código, teste que falha antes da implementação (provado pelo loop na base), `dotnet test`,
+  técnicas (cirúrgica, simplicidade), revisão cruzada e `scripts/portoes.sh`. Kit em `circulo.toml`.
+- `scripts/portoes.sh` é o CLAUDE.md em forma de comando: rode antes de abrir PR. Constituição (nunca mexer sem PR
+  humano): `.github/`, `CLAUDE.md`, ADR 0001, `docs/contracts/`, `circulo.toml`, `scripts/portoes.sh`.
+- Skills em `.claude/skills/` (TDD, writing-plans, karpathy-guidelines): leia o SKILL.md que serve à tarefa.
+
 ## Mapa da esteira (fila → worker)
 
 | Etapa | Fila | Worker | Entrada → Saída |

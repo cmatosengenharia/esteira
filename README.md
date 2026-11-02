@@ -89,5 +89,8 @@ data/                       storage local (fora do git)   models/   modelo do wh
 
 ## Fluxo de trabalho
 
+O círculo autoevolutivo (repo `circulo`) evolui este repositório por PR em branches `circulo/<n>`, com plano, teste
+antes do código e evidência guardada no loop (ADR 0003; kit em `circulo.toml`; portões em `scripts/portoes.sh`).
+
 A cópia de trabalho do Claude é o clone na nuvem; ele faz push na `main` e a CI compila, testa e roda a esteira de
 ponta a ponta (`e2e`, com o master como artifact). No Mac, só `git pull`.
