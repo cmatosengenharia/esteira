@@ -12,5 +12,7 @@
     <EmbeddedResource Include="../../docs/contracts/edl.schema.json" LogicalName="contracts/edl.schema.json" />
     <EmbeddedResource Include="../../docs/contracts/style-bible.schema.json" LogicalName="contracts/style-bible.schema.json" />
     <EmbeddedResource Include="../../docs/contracts/network-specs.json" LogicalName="contracts/network-specs.json" />
+    <!-- Oferta (posicionamento e planos): fonte única em docs/oferta.md, lida por Billing/PlanCatalog. -->
+    <EmbeddedResource Include="../../docs/oferta.md" LogicalName="offer/oferta.md" />
   </ItemGroup>
 </Project>
