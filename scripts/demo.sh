@@ -2,7 +2,8 @@
 # Prova de ponta a ponta: sobe infra, API e Workers, gera (se preciso) um vídeo de 20 s, envia para POST /jobs
 # e acompanha até Stage=Rendered ou Failed. Funciona no Mac (say) e em Linux (espeak-ng).
 #
-# Uso: scripts/demo.sh [--no-docker] [--no-build] [arquivo.mp4]
+# Uso: scripts/demo.sh [--no-docker] [--no-build] [--shorts N] [arquivo.mp4]
+#   --shorts N   até N shorts de 30–60 s por vídeo (padrão 3; só quando o vídeo cortado tem >= 45 s)
 #   --no-docker  não toca no Docker (Postgres/RabbitMQ já estão de pé, ex.: services da CI)
 #   --no-build   não roda dotnet build (já compilado)
 set -euo pipefail
@@ -11,14 +12,17 @@ ROOT=$(pwd)
 RUN_DIR="$ROOT/.run"; mkdir -p "$RUN_DIR" samples data
 API_URL=${API_URL:-http://localhost:5080}
 TIMEOUT_SECONDS=${TIMEOUT_SECONDS:-600}
-USE_DOCKER=1; BUILD=1; INPUT=""
-for arg in "$@"; do
-  case "$arg" in
+USE_DOCKER=1; BUILD=1; INPUT=""; SHORTS=""
+while (( $# )); do
+  case "$1" in
     --no-docker) USE_DOCKER=0 ;;
     --no-build) BUILD=0 ;;
-    *) INPUT="$arg" ;;
+    --shorts) SHORTS="$2"; shift ;;
+    *) INPUT="$1" ;;
   esac
+  shift
 done
+[[ -n "$SHORTS" ]] && export Media__ShortsPerVideo="$SHORTS"
 
 log() { printf '\n\033[1;34m== %s\033[0m\n' "$*"; }
 fail() { echo "ERRO: $*" >&2; exit 1; }
@@ -171,3 +175,5 @@ python3 -c "import sys; i,o=float(sys.argv[1]),float(sys.argv[2]); sys.exit(0 if
 ASS=$(ls data/work/*/captions-9x16.ass 2>/dev/null | head -1 || true)
 [[ -n "$ASS" ]] && echo "legendas: $(grep -c '^Dialogue' "$ASS") frases em $ASS"
 echo "OK: master 1080x1920, $OUT_DUR s (entrada $IN_DUR s)"
+CLIPS=$(echo "$BODY" | python3 -c "import sys,json; print(sum(1 for o in json.load(sys.stdin)['outputs'] if o['kind']=='Clip'))")
+echo "shorts: $CLIPS (Media__ShortsPerVideo=${Media__ShortsPerVideo:-3}; só com >= 45 s de vídeo cortado)"

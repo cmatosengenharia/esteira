@@ -64,6 +64,24 @@ public class EdlTests
     }
 
     [Fact]
+    public void Clips_round_trip_through_json_and_pass_the_schema()
+    {
+        var doc = new EdlDocument
+        {
+            SourceObjectKey = "t/jobs/1/source.mp4", SourceDurationSeconds = 180, SourceFps = 30, Strategy = "teste",
+            Keep = [new TimeRange(0, 180)], Params = new EdlParams(), Outputs = [(AspectRatio.Vertical9x16, "center")],
+            Clips = [new EdlClip("Por que 3 erros somem", 30.0, 72.5, 85, "Por que 3 erros de fala somem?"), new EdlClip("Frase 20", 100, 140, 50, null)],
+        };
+
+        var json = doc.ToJson();
+
+        Assert.Empty(EdlValidator.Validate(json));
+        var back = EdlDocument.Parse(json);
+        Assert.Equal(doc.Clips, back.Clips);
+        Assert.Contains("\"hookSentence\": \"Por que 3 erros de fala somem?\"", json);
+    }
+
+    [Fact]
     public void Validator_rejects_edl_that_violates_the_contract()
     {
         var missing = """{ "version": 1, "source": { "objectKey": "x" }, "keep": [], "layers": [], "params": {}, "outputs": [] }""";

@@ -16,4 +16,5 @@ print(f"  {'total':<12} {total:>8} ms")
 u = d["usage"]
 print(f"usage: llmTokens={u['llmTokens']} renderMinutes={u['renderMinutes']:.3f} transcribedMinutes={u['transcribedMinutes']:.3f}")
 for o in d["outputs"]:
-    print(f"saída {o['aspect']}: {o['localPath']} ({o['durationSeconds']} s, {o['sizeBytes']} bytes)")
+    kind = "saída" if o["kind"] == "Master" else "short"
+    print(f"{kind} {o['aspect']}: {o['localPath']} ({o['durationSeconds']} s, {o['sizeBytes']} bytes)")
