@@ -83,6 +83,52 @@ public class SpeechErrorDetectorTests
     }
 
     [Fact]
+    public void Distinct_sentences_that_start_with_the_same_ngram_are_not_a_retake()
+    {
+        // "O que a gente faz aqui é X." [pausa 0,3 s] "O que a gente quer é Y." — mesmo 4-grama, frases diferentes: nada a cortar.
+        IReadOnlyList<TranscriptWord> words =
+        [
+            new("O", 0.00, 0.10, 1, null), new("que", 0.15, 0.30, 1, null), new("a", 0.35, 0.40, 1, null), new("gente", 0.45, 0.70, 1, null),
+            new("faz", 0.75, 0.90, 1, null), new("aqui", 0.95, 1.10, 1, null), new("é", 1.15, 1.20, 1, null), new("X.", 1.25, 1.50, 1, null),
+            new("O", 1.80, 1.90, 1, null), new("que", 1.95, 2.10, 1, null), new("a", 2.15, 2.20, 1, null), new("gente", 2.25, 2.50, 1, null),
+            new("quer", 2.55, 2.80, 1, null), new("é", 2.85, 2.90, 1, null), new("Y.", 2.95, 3.20, 1, null),
+        ];
+
+        Assert.Empty(SpeechErrorDetector.DetectCuts(words));
+    }
+
+    [Fact]
+    public void Three_takes_cut_the_first_two_and_keep_the_last()
+    {
+        IReadOnlyList<TranscriptWord> words =
+        [
+            new("isso", 0.00, 0.20, 1, null), new("aqui", 0.25, 0.45, 1, null), new("é", 0.50, 0.60, 1, null), new("ouro", 0.65, 0.95, 1, null),
+            new("isso", 1.20, 1.40, 1, null), new("aqui", 1.45, 1.65, 1, null), new("é", 1.70, 1.80, 1, null), new("ouro", 1.85, 2.15, 1, null),
+            new("isso", 2.40, 2.60, 1, null), new("aqui", 2.65, 2.85, 1, null), new("é", 2.90, 3.00, 1, null), new("ouro", 3.05, 3.35, 1, null),
+        ];
+
+        var cuts = SpeechErrorDetector.DetectCuts(words);
+
+        Assert.Equal([(new TimeRange(0.00, 1.12), "repetição"), (new TimeRange(1.20, 2.32), "repetição")], cuts);
+        Assert.Equal([new TimeRange(2.32, 3.35)], SpeechErrorDetector.Subtract([new TimeRange(0, 3.35)], cuts.Select(c => c.Range).ToList()));
+    }
+
+    [Fact]
+    public void Hesitation_inside_the_cut_take_is_not_reported_twice()
+    {
+        // Primeira tomada com "é…" isolado no meio, depois a tomada inteira de novo (também com o "é…").
+        IReadOnlyList<TranscriptWord> words =
+        [
+            new("vamos", 0.00, 0.30, 1, null), new("é…", 1.00, 1.20, 1, null), new("falar", 2.00, 2.30, 1, null), new("da", 2.35, 2.45, 1, null), new("esteira", 2.50, 2.90, 1, null),
+            new("vamos", 3.20, 3.50, 1, null), new("é…", 4.20, 4.40, 1, null), new("falar", 5.20, 5.50, 1, null), new("da", 5.55, 5.65, 1, null), new("esteira", 5.70, 6.10, 1, null),
+        ];
+
+        var cuts = SpeechErrorDetector.DetectCuts(words);
+
+        Assert.Equal([(new TimeRange(0.00, 3.12), "repetição"), (new TimeRange(4.20, 4.40), "hesitação")], cuts);
+    }
+
+    [Fact]
     public void Subtract_drops_pieces_shorter_than_min_clip()
     {
         var keep = SpeechErrorDetector.Subtract([new TimeRange(0, 5)], [new TimeRange(0.1, 2), new TimeRange(1.5, 4.9)]);

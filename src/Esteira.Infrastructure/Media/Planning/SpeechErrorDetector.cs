@@ -4,9 +4,12 @@ using Esteira.Infrastructure.Media.Audio;
 namespace Esteira.Infrastructure.Media.Planning;
 
 /// <summary>
-/// Erros de fala a partir da transcrição por palavra: tomada repetida (n-grama de 4+ palavras dito de novo em menos de 10 s,
-/// com pausa >= 0,2 s antes do recomeço: a primeira é o erro, fica a segunda; o corte termina com a mesma folga de entrada
-/// do SilenceDetector) e hesitação isolada ("é…", "hã", "tipo" com pausa > 0,6 s antes e depois).
+/// Erros de fala a partir da transcrição por palavra.
+/// Tomada repetida: a fala desde a palavra i até uma pausa >= 0,2 s (4+ palavras) é dita de novo, inteira e na mesma ordem,
+/// logo depois da pausa e em menos de 10 s. A primeira tomada é o erro e sai; fica a segunda; o corte termina com a mesma
+/// folga de entrada do SilenceDetector. Exigir que a primeira tomada termine na pausa evita cortar duas frases distintas que
+/// só começam com o mesmo n-grama ("o que a gente faz X. [pausa] o que a gente quer Y.").
+/// Hesitação isolada: "é…", "hã", "tipo" com pausa > 0,6 s antes e depois. Hesitação dentro de uma tomada já cortada não é contada.
 /// Custo: 0 tokens.
 /// </summary>
 public static class SpeechErrorDetector
@@ -29,10 +32,12 @@ public static class SpeechErrorDetector
         while (i + MinRepeatWords <= words.Count)
         {
             var next = i + 1;
-            for (var j = i + MinRepeatWords; j + MinRepeatWords <= words.Count && words[j].Start - words[i].Start < RepeatWindowSeconds; j++)
+            for (var j = i + MinRepeatWords; j < words.Count && words[j].Start - words[i].Start < RepeatWindowSeconds; j++)
             {
-                if (words[j].Start - words[j - 1].End < RetakePauseSeconds) continue; // sem pausa é repetição intencional
-                if (!Enumerable.Range(0, MinRepeatWords).All(k => norm[i + k].Length > 0 && norm[i + k] == norm[j + k])) continue;
+                if (words[j].Start - words[j - 1].End < RetakePauseSeconds) continue; // sem pausa não há recomeço
+                var take = j - i; // a primeira tomada vai de i até a palavra antes da pausa
+                if (j + take > words.Count) break; // não cabe uma segunda tomada do mesmo tamanho
+                if (!Enumerable.Range(0, take).All(k => norm[i + k].Length > 0 && norm[i + k] == norm[j + k])) continue;
                 cuts.Add((new TimeRange(words[i].Start, Math.Round(words[j].Start - RetakeLeadSeconds, 3)), "repetição"));
                 next = j; // continua da segunda tomada, que fica
                 break;
@@ -45,8 +50,9 @@ public static class SpeechErrorDetector
             if (!Hesitations.Contains(norm[k])) continue;
             var before = k == 0 ? double.MaxValue : words[k].Start - words[k - 1].End;
             var after = k == words.Count - 1 ? double.MaxValue : words[k + 1].Start - words[k].End;
-            if (before > HesitationPauseSeconds && after > HesitationPauseSeconds)
-                cuts.Add((new TimeRange(words[k].Start, words[k].End), "hesitação"));
+            if (before <= HesitationPauseSeconds || after <= HesitationPauseSeconds) continue;
+            if (cuts.Any(c => c.Range.In <= words[k].Start && words[k].End <= c.Range.Out)) continue; // já sai com a tomada repetida
+            cuts.Add((new TimeRange(words[k].Start, words[k].End), "hesitação"));
         }
 
         return cuts.OrderBy(c => c.Range.In).ToList();
