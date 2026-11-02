@@ -45,7 +45,18 @@ if [[ $USE_DOCKER == 1 ]]; then
   [[ "$pg" == healthy && "$rb" == healthy ]] || fail "infra não ficou saudável (postgres=$pg rabbitmq=$rb)"
 fi
 
-# ---------- 2. whisper ----------
+# ---------- 2. ffmpeg com libass ----------
+# O `ffmpeg` do Homebrew core (9.x) vem sem libass e o render falha ("No option name near 'captions-9x16.ass'").
+# Ordem: $ESTEIRA_FFMPEG_BIN, ffmpeg@7 (keg-only), ffmpeg do PATH; vale o primeiro que tiver o filtro `subtitles`.
+FFMPEG_BIN=""
+for cand in "${ESTEIRA_FFMPEG_BIN:-}" "$(brew --prefix 2>/dev/null)/opt/ffmpeg@7/bin/ffmpeg" "$(command -v ffmpeg || true)"; do
+  [[ -n "$cand" && -x "$cand" && "$("$cand" -hide_banner -filters 2>/dev/null || true)" == *" subtitles "* ]] && { FFMPEG_BIN="$cand"; break; }
+done
+[[ -n "$FFMPEG_BIN" ]] || fail "nenhum ffmpeg com libass (filtro subtitles); rode scripts/check-env.sh"
+export Media__FfmpegPath="$FFMPEG_BIN"
+echo "ffmpeg: $FFMPEG_BIN"
+
+# ---------- 2b. whisper ----------
 WHISPER_BIN=${ESTEIRA_WHISPER_BIN:-$(command -v whisper-cli || command -v whisper-cpp || true)}
 [[ -n "$WHISPER_BIN" ]] || fail "whisper.cpp não encontrado; rode scripts/check-env.sh"
 [[ -f models/ggml-small.bin ]] || fail "models/ggml-small.bin não encontrado; rode scripts/check-env.sh"
