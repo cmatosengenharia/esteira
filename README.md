@@ -11,10 +11,10 @@ A CI (`e2e`) roda isso com um vídeo real a cada push.
 
 ## Setup no Mac (Apple Silicon)
 
-Pré-requisitos (sem sudo): Homebrew, .NET SDK 10, ffmpeg, Node 22+, Docker (Docker.app ou colima).
+Pré-requisitos (sem sudo): Homebrew, .NET SDK 10, ffmpeg **com libass** (`ffmpeg@7`; o `ffmpeg` 9.x do Homebrew core vem sem libass e o render de legendas falha), Node 22+, Docker (Docker.app ou colima; com colima, também `docker-compose` e `docker-credential-helper`).
 
 ```bash
-brew install dotnet ffmpeg node@22 whisper-cpp
+brew install dotnet ffmpeg@7 node@22 whisper-cpp
 brew install --cask docker        # ou: brew install colima docker docker-compose
 ```
 
