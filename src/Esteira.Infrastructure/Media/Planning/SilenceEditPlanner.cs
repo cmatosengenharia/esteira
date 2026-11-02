@@ -18,13 +18,17 @@ public sealed class SilenceEditPlanner(ILogger<SilenceEditPlanner> logger) : IEd
         var job = request.Job;
         var wav = WavFile.Read(request.WavLocalPath);
         var p = new EdlParams();
-        var keep = SilenceDetector.DetectKeep(wav, new SilenceParams(
+        var silenceKeep = SilenceDetector.DetectKeep(wav, new SilenceParams(
             ThresholdDb: p.SilenceThresholdDb, MinSilenceSeconds: p.MinSilenceSeconds,
             LeadSeconds: p.LeadSeconds, TrailSeconds: p.TrailSeconds));
-        if (keep.Count == 0)
+        if (silenceKeep.Count == 0)
             throw new DomainException("Nenhum trecho com fala acima do limiar de silêncio; nada para manter");
 
         var words = request.Transcript.Words;
+        var cuts = SpeechErrorDetector.DetectCuts(words);
+        var keep = SpeechErrorDetector.Subtract(silenceKeep, cuts.Select(c => c.Range).ToList());
+        if (keep.Count == 0)
+            throw new DomainException("Nada sobrou depois de cortar repetições e hesitações");
         var annotations = keep.Select(r =>
         {
             var inside = words.Where(w => (w.Start + w.End) / 2 >= r.In && (w.Start + w.End) / 2 < r.Out).ToList();
@@ -38,7 +42,7 @@ public sealed class SilenceEditPlanner(ILogger<SilenceEditPlanner> logger) : IEd
             SourceDurationSeconds = job.DurationSeconds ?? wav.DurationSeconds,
             SourceFps = job.Fps ?? 30,
             StyleTemplateId = job.StyleTemplateId?.ToString(),
-            Strategy = $"Fase 0: remove {keep.Count - 1} silêncio(s) >= {p.MinSilenceSeconds}s abaixo de {p.SilenceThresholdDb} dB e legenda por frase; {wav.DurationSeconds:0.0}s → {totalKept:0.0}s",
+            Strategy = $"Fase 0: remove {silenceKeep.Count - 1} silêncio(s) >= {p.MinSilenceSeconds}s abaixo de {p.SilenceThresholdDb} dB, {cuts.Count(c => c.Kind == "repetição")} repetição(ões) e {cuts.Count(c => c.Kind == "hesitação")} hesitação(ões) e legenda por frase; {wav.DurationSeconds:0.0}s → {totalKept:0.0}s",
             Keep = keep,
             KeepAnnotations = annotations,
             Captions = new CaptionStyle(),

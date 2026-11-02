@@ -40,6 +40,30 @@ public class EdlTests
     }
 
     [Fact]
+    public async Task Planner_cuts_repeated_take_and_hesitation_from_keep()
+    {
+        var wav = SyntheticAudio.Build((true, 6.6));
+        var path = Path.Combine(Path.GetTempPath(), $"esteira-{Guid.NewGuid():N}.wav");
+        await File.WriteAllBytesAsync(path, WavFile.Write(wav.SampleRate, wav.Samples));
+        try
+        {
+            var job = new VideoJob { OriginalFileName = "a.mp4", SourceObjectKey = "t/jobs/1/source.mp4", DurationSeconds = 6.6, Fps = 30 };
+            var transcript = new Transcript("pt", SpeechErrorDetectorTests.WithErrors());
+            var planner = new SilenceEditPlanner(NullLogger<SilenceEditPlanner>.Instance);
+
+            var json = await planner.PlanAsync(new PlanRequest(job, transcript, path, null), CancellationToken.None);
+
+            Assert.Empty(EdlValidator.Validate(json));
+            var edl = EdlDocument.Parse(json);
+            Assert.Equal([new TimeRange(1.80, 4.60), new TimeRange(4.90, 6.6)], edl.Keep);
+            Assert.Contains("1 repetição(ões)", edl.Strategy);
+            Assert.Contains("1 hesitação(ões)", edl.Strategy);
+            Assert.Contains("\"firstWord\": \"vamos\"", json);
+        }
+        finally { File.Delete(path); }
+    }
+
+    [Fact]
     public void Validator_rejects_edl_that_violates_the_contract()
     {
         var missing = """{ "version": 1, "source": { "objectKey": "x" }, "keep": [], "layers": [], "params": {}, "outputs": [] }""";
