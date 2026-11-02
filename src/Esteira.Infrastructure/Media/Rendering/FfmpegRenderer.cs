@@ -89,6 +89,46 @@ public sealed class FfmpegRenderer(
             logger.LogInformation("render job={JobId} {Aspect} {Dur:0.0}s em {Ms} ms → {Key}", job.Id, aspect.ToContract(), info.DurationSeconds, sw.ElapsedMilliseconds, key);
         }
 
+        // Shorts: cada clipe é o mesmo select, restrito ao trecho do clipe, sempre 9:16 com legendas remapeadas.
+        Transcript? transcriptForClips = null;
+        if (edl.Clips.Count > 0 && edl.Captions is not null && !string.IsNullOrEmpty(job.TranscriptJson))
+            transcriptForClips = JsonSerializer.Deserialize<Transcript>(job.TranscriptJson, JsonDefaults.Options);
+        for (var n = 1; n <= edl.Clips.Count; n++)
+        {
+            var clip = edl.Clips[n - 1];
+            var clipKeep = ShortsPlanner.ClipKeep(edl.Keep, new TimeRange(clip.In, clip.Out));
+            if (clipKeep.Count == 0) { logger.LogWarning("clip {N} de job={JobId} fora dos trechos mantidos; ignorado", n, job.Id); continue; }
+            var (w, h) = AspectRatio.Vertical9x16.ToPixels();
+            string? assFile = null;
+            if (transcriptForClips is { Words.Count: > 0 } && edl.Captions is { } style)
+            {
+                var phrases = CaptionGrouper.Group(TimelineMapper.Remap(transcriptForClips.Words, clipKeep), style.CombineWithinMs, style.MaxCharsPerLine, edl.Params.SplitGapSeconds);
+                assFile = $"captions-clip-{n}.ass";
+                await File.WriteAllTextAsync(Path.Combine(workDir, assFile), AssWriter.Write(phrases, style, w, h), ct);
+            }
+            var key = ObjectKeys.Clip(job, n);
+            var outPath = storage.GetLocalPathForWrite(key);
+            var args = new List<string>
+            {
+                "-y", "-v", "error", "-i", request.SourceLocalPath,
+                "-filter_complex", BuildFilter(BuildSelect(clipKeep), w, h, assFile), "-map", "[v]", "-map", "[a]",
+                "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p",
+                "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", outPath,
+            };
+            var sw = Stopwatch.StartNew();
+            var result = await runner.RunAsync(_o.FfmpegPath, args, ct, workingDirectory: workDir);
+            sw.Stop();
+            if (!result.Succeeded) throw new InvalidOperationException($"ffmpeg (clip {n}) falhou ({result.ExitCode}): {ProcessRunner.Tail(result.StdErr)}");
+            totalRender += sw.Elapsed;
+            var info = await inspector.InspectAsync(outPath, ct);
+            outputs.Add(new JobOutput
+            {
+                Kind = OutputKind.Clip, Aspect = AspectRatio.Vertical9x16, ObjectKey = key,
+                DurationSeconds = Math.Round(info.DurationSeconds, 3), SizeBytes = new FileInfo(outPath).Length,
+            });
+            logger.LogInformation("clip {N} job={JobId} \"{Title}\" {Dur:0.0}s em {Ms} ms → {Key}", n, job.Id, clip.Title, info.DurationSeconds, sw.ElapsedMilliseconds, key);
+        }
+
         return new RenderResult(outputs, Math.Round(totalRender.TotalMinutes, 4));
     }
 

@@ -41,6 +41,8 @@ public sealed class EdlDocument
     public required EdlParams Params { get; init; }
     public required IReadOnlyList<(AspectRatio Aspect, string Reframe)> Outputs { get; init; }
     public double? TargetDurationSeconds { get; init; }
+    /// <summary>Cortes curtos candidatos (`clips[]`), tempos no vídeo original.</summary>
+    public IReadOnlyList<EdlClip> Clips { get; init; } = [];
 
     public string ToJson()
     {
@@ -94,6 +96,17 @@ public sealed class EdlDocument
         };
         if (TargetDurationSeconds is { } target)
             root["verify"] = new JsonObject { ["targetDurationSeconds"] = target };
+        if (Clips.Count > 0)
+        {
+            var clips = new JsonArray();
+            foreach (var clip in Clips)
+            {
+                var o = new JsonObject { ["title"] = clip.Title, ["in"] = clip.In, ["out"] = clip.Out, ["score"] = clip.Score };
+                if (clip.HookSentence is not null) o["hookSentence"] = clip.HookSentence;
+                clips.Add(o);
+            }
+            root["clips"] = clips;
+        }
 
         return root.ToJsonString(new JsonSerializerOptions { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
     }
@@ -140,6 +153,10 @@ public sealed class EdlDocument
             Params = prms,
             Outputs = outputs,
             TargetDurationSeconds = r.TryGetProperty("verify", out var v) ? Dbl(v, "targetDurationSeconds") : null,
+            Clips = r.TryGetProperty("clips", out var cl) && cl.ValueKind == JsonValueKind.Array
+                ? cl.EnumerateArray().Select(c => new EdlClip(Str(c, "title") ?? string.Empty, c.GetProperty("in").GetDouble(), c.GetProperty("out").GetDouble(),
+                    Dbl(c, "score") ?? 0, Str(c, "hookSentence"))).ToList()
+                : [],
         };
     }
 
