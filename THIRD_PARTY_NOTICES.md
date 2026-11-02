@@ -19,3 +19,4 @@ Cada linha precisa de: repo, commit (ou tag) consultado, licença, arquivos de o
 | ffmpeg / ffprobe | LGPL/GPL (binário externo, chamado por processo) | ingest, extração de áudio, render |
 | whisper.cpp (`whisper-cli`) | MIT (binário externo, chamado por processo) | transcrição com timestamps por palavra |
 | Hyperframes | Apache-2.0 | composições HTML (a partir da Fase 1) |
+| Tiles OpenStreetMap (`https://tile.openstreetmap.org/{z}/{x}/{y}.png`) | dados ODbL 1.0 (licença conferida em https://www.openstreetmap.org/copyright); tiles sob a Tile Usage Policy da OSMF | fundo do estilo 2 (mapa animado, `src/Esteira.Infrastructure/Media/Maps/MapComposer.cs`). Nenhum código portado, só dados em runtime. Atribuição obrigatória e visível no quadro: "© OpenStreetMap contributors". Política de uso: sem uso pesado nem pré-download em massa, cache local dos tiles, User-Agent que identifique a Esteira; volume alto exige provedor próprio ou pago. |
